@@ -3,12 +3,15 @@ services:
   - type: web
     name: personaplex-backend
     env: node
+    plan: free
     rootDir: backend
     buildCommand: npm install
     startCommand: node server.js
     envVars:
       - key: NODE_ENV
         value: production
+      - key: NODE_VERSION
+        value: "20"
       - key: GROQ_API_KEY
         sync: false
       - key: RUNPOD_API_KEY
@@ -20,6 +23,7 @@ services:
   - type: web
     name: personaplex-frontend
     env: static
+    plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
