@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://personaplex-backend.onrender.com';
 
 export default function VoiceTestingWidget() {
   const [isRecording, setIsRecording] = useState(false);
