@@ -11,6 +11,7 @@ export default function VoiceTestingWidget() {
   const [textInput, setTextInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const recognitionRef = useRef(null);
+  const audioRef = useRef(new Audio());
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -40,6 +41,10 @@ export default function VoiceTestingWidget() {
 
     return () => {
       if (recognitionRef.current) recognitionRef.current.stop();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+      }
     };
   }, []);
 
@@ -68,9 +73,10 @@ export default function VoiceTestingWidget() {
       setStatus('AI is speaking...');
 
       if (data.audioBase64) {
-        const audio = new Audio('data:audio/mp3;base64,' + data.audioBase64);
-        audio.onended = () => setStatus('Idle');
-        audio.play().catch(() => {
+        audioRef.current.src = 'data:audio/mp3;base64,' + data.audioBase64;
+        audioRef.current.onended = () => setStatus('Idle');
+        audioRef.current.play().catch((err) => {
+          console.error('Browser blocked autoplay:', err);
           speakText(data.reply);
         });
       } else {
@@ -86,6 +92,11 @@ export default function VoiceTestingWidget() {
   };
 
   const toggleRecording = () => {
+    // UNLOCK AUDIO CONTEXT ON FIRST CLICK TO BYPASS AUTOPLAY POLICIES
+    if (audioRef.current.src === '') {
+      audioRef.current.play().catch(() => {});
+    }
+
     if (!recognitionRef.current) {
       setStatus('Voice not supported. Use text input below.');
       return;
