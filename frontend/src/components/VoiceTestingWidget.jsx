@@ -11,7 +11,17 @@ export default function VoiceTestingWidget() {
   const [textInput, setTextInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const recognitionRef = useRef(null);
-  const audioRef = useRef(new Audio());
+  const audioCtxRef = useRef(null);
+
+  const getAudioContext = () => {
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtxRef.current.state === 'suspended') {
+      audioCtxRef.current.resume();
+    }
+    return audioCtxRef.current;
+  };
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -41,10 +51,7 @@ export default function VoiceTestingWidget() {
 
     return () => {
       if (recognitionRef.current) recognitionRef.current.stop();
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = '';
-      }
+      if (audioCtxRef.current) audioCtxRef.current.close();
     };
   }, []);
 
@@ -73,18 +80,31 @@ export default function VoiceTestingWidget() {
       setStatus('AI is speaking...');
 
       if (data.audioBase64) {
-        audioRef.current.src = 'data:audio/mp3;base64,' + data.audioBase64;
-        audioRef.current.onended = () => setStatus('Idle');
-        audioRef.current.play().catch((err) => {
-          console.error('Browser blocked autoplay:', err);
-          speakText(data.reply);
-        });
+        try {
+          const ctx = getAudioContext();
+          const binaryString = window.atob(data.audioBase64);
+          const len = binaryString.length;
+          const bytes = new Uint8Array(len);
+          for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          const audioBuffer = await ctx.decodeAudioData(bytes.buffer);
+          const source = ctx.createBufferSource();
+          source.buffer = audioBuffer;
+          source.connect(ctx.destination);
+          source.onended = () => setStatus('Idle');
+          source.start(0);
+        } catch (err) {
+          console.error('Web Audio API failed:', err);
+          setStatus('Browser Audio Error');
+        }
       } else {
-        speakText(data.reply);
+        // Explicitly warn the user that the server is missing the Deepgram key!
+        setStatus('⚠️ WARNING: Deepgram API Key is missing on the Render Cloud Server!');
       }
     } catch (err) {
       console.error(err);
-      setStatus('Error connecting to backend.');
+      setStatus(`Error: ${err.message}`);
       setLatencyMs(null);
     } finally {
       setIsLoading(false);
@@ -92,10 +112,7 @@ export default function VoiceTestingWidget() {
   };
 
   const toggleRecording = () => {
-    // UNLOCK AUDIO CONTEXT ON FIRST CLICK TO BYPASS AUTOPLAY POLICIES
-    if (audioRef.current.src === '') {
-      audioRef.current.play().catch(() => {});
-    }
+    getAudioContext(); // UNLOCK AUDIO CONTEXT ON FIRST CLICK TO BYPASS AUTOPLAY POLICIES
 
     if (!recognitionRef.current) {
       setStatus('Voice not supported. Use text input below.');
