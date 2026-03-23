@@ -1,0 +1,8 @@
+node_modules
+.env
+*.db
+*.mp3
+reply_*.txt
+reply_*.mp3
+.DS_Store
+dist

@@ -1,0 +1,30 @@
+services:
+  # Backend Node.js App
+  - type: web
+    name: personaplex-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GROQ_API_KEY
+        sync: false
+      - key: RUNPOD_API_KEY
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+
+  # Frontend React SPA
+  - type: web
+    name: personaplex-frontend
+    env: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_API_URL
+        sync: false
