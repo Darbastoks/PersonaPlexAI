@@ -58,6 +58,9 @@ export default function VoiceTestingWidget() {
         body: JSON.stringify({ message, agentName: 'Sarah' })
       });
       const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'API Request Failed');
+      }
 
       const elapsed = Math.round(performance.now() - start);
       setLatencyMs(data.latencyMs || elapsed);

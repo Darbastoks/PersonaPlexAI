@@ -102,19 +102,9 @@ async function callG4F(userMessage) {
 }
 
 // ── TTS ────────────────────────────────────────────────────────
+// Using browser TTS for speed and zero-cost! Edge-tts required Python on Render, which caused crashes.
 async function generateTTS(text) {
-  const ts = Date.now();
-  const fmp3 = path.resolve(__dirname, `reply_${ts}.mp3`);
-  const ftxt = path.resolve(__dirname, `reply_${ts}.txt`);
-  try {
-    fs.writeFileSync(ftxt, text);
-    await execPromise(`python -m edge_tts -f "${ftxt}" --write-media "${fmp3}" --voice en-US-AriaNeural`);
-    const buf = fs.readFileSync(fmp3);
-    return buf.toString('base64');
-  } finally {
-    try { fs.unlinkSync(ftxt); } catch {}
-    try { fs.unlinkSync(fmp3); } catch {}
-  }
+  return null; // The frontend will automatically fall back to window.speechSynthesis.speak()
 }
 
 const stats = { totalRequests: 0, avgLlmMs: 0, avgTtsMs: 0, cacheHits: 0 };
@@ -133,14 +123,11 @@ app.post('/api/chat', async (req, res) => {
       return res.json({ ...cached, cached: true, latencyMs: Date.now() - started });
     }
 
-    let aiReply;
-    try {
-      aiReply = await callGroq(message);
-    } catch (e) {
-      console.log('Groq failed, falling back to g4f...');
-      aiReply = await callG4F(message);
+    if (!GROQ_API_KEY || GROQ_API_KEY.length < 10) {
+      return res.status(500).json({ error: 'Missing GROQ_API_KEY environment variable on Render!' });
     }
 
+    const aiReply = await callGroq(message);
     const audio64 = await generateTTS(aiReply);
     const resp = { reply: aiReply, audioBase64: audio64, latencyMs: Date.now() - started };
 
