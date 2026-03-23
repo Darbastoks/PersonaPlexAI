@@ -5,11 +5,11 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://personaplex-backend.onr
 export default function VoiceTestingWidget() {
   const [isRecording, setIsRecording] = useState(false);
   const [status, setStatus] = useState('Idle');
-  const [transcript, setTranscript] = useState('');
-  const [aiResponse, setAiResponse] = useState('');
+  const [history, setHistory] = useState([]);
   const [latencyMs, setLatencyMs] = useState(null);
   const [textInput, setTextInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
   const recognitionRef = useRef(null);
   const audioCtxRef = useRef(null);
 
@@ -33,9 +33,8 @@ export default function VoiceTestingWidget() {
 
       recognitionRef.current.onresult = async (event) => {
         const text = event.results[0][0].transcript;
-        setTranscript(text);
         setIsRecording(false);
-        await sendMessage(text);
+        await sendMessage(text, true);
       };
 
       recognitionRef.current.onerror = (event) => {
@@ -55,11 +54,14 @@ export default function VoiceTestingWidget() {
     };
   }, []);
 
-  const sendMessage = async (message) => {
+  const sendMessage = async (message, fromVoice = false) => {
     setIsLoading(true);
     setStatus('Processing...');
-    setAiResponse('');
     setLatencyMs(null);
+
+    // Save current history to send, then instantly append user message to UI
+    const currentHistory = [...history];
+    setHistory(prev => [...prev, { role: 'user', content: message }]);
 
     const start = performance.now();
 
@@ -67,7 +69,7 @@ export default function VoiceTestingWidget() {
       const res = await fetch(`${API_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, agentName: 'Sarah' })
+        body: JSON.stringify({ message, history: currentHistory, agentName: 'Sarah' })
       });
       const data = await res.json();
       if (!res.ok) {
@@ -76,7 +78,7 @@ export default function VoiceTestingWidget() {
 
       const elapsed = Math.round(performance.now() - start);
       setLatencyMs(data.latencyMs || elapsed);
-      setAiResponse(data.reply);
+      setHistory(prev => [...prev, { role: 'assistant', content: data.reply }]);
       setStatus('AI is speaking...');
 
       if (data.audioBase64) {
@@ -99,7 +101,6 @@ export default function VoiceTestingWidget() {
           setStatus('Browser Audio Error');
         }
       } else {
-        // Explicitly warn the user that the server is missing the Deepgram key!
         setStatus('⚠️ WARNING: Deepgram API Key is missing on the Render Cloud Server!');
       }
     } catch (err) {
@@ -111,8 +112,13 @@ export default function VoiceTestingWidget() {
     }
   };
 
+  const clearHistory = () => {
+    setHistory([]);
+    setLatencyMs(null);
+  };
+
   const toggleRecording = () => {
-    getAudioContext(); // UNLOCK AUDIO CONTEXT ON FIRST CLICK TO BYPASS AUTOPLAY POLICIES
+    getAudioContext(); // UNLOCK AUDIO CONTEXT ON FIRST CLICK
 
     if (!recognitionRef.current) {
       setStatus('Voice not supported. Use text input below.');
@@ -123,9 +129,6 @@ export default function VoiceTestingWidget() {
       setIsRecording(false);
       setStatus('Idle');
     } else {
-      setTranscript('');
-      setAiResponse('');
-      setLatencyMs(null);
       recognitionRef.current.start();
       setIsRecording(true);
       setStatus('Listening... speak now');
@@ -135,22 +138,8 @@ export default function VoiceTestingWidget() {
   const handleTextSubmit = (e) => {
     e.preventDefault();
     if (!textInput.trim()) return;
-    setTranscript(textInput.trim());
-    sendMessage(textInput.trim());
+    sendMessage(textInput.trim(), false);
     setTextInput('');
-  };
-
-  const speakText = (text) => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    const voices = window.speechSynthesis.getVoices();
-    const preferred = voices.find(v => v.lang.includes('en-GB') && v.name.includes('Female'))
-      || voices.find(v => v.lang.includes('en-US'))
-      || voices[0];
-    if (preferred) utterance.voice = preferred;
-    utterance.rate = 1.0;
-    utterance.pitch = 1.1;
-    utterance.onend = () => setStatus('Idle');
-    window.speechSynthesis.speak(utterance);
   };
 
   return (
@@ -207,7 +196,7 @@ export default function VoiceTestingWidget() {
       </div>
 
       {/* Text Input Fallback */}
-      <form onSubmit={handleTextSubmit} style={{ marginBottom: '1rem' }}>
+      <form onSubmit={handleTextSubmit} style={{ marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <input
             type="text"
@@ -239,33 +228,50 @@ export default function VoiceTestingWidget() {
         </div>
       </form>
 
-      {/* Transcript */}
-      {transcript && (
+      {/* Chat History */}
+      {history.length > 0 && (
         <div style={{
-          background: 'rgba(255,255,255,0.03)',
-          padding: '0.8rem 1rem',
-          borderRadius: '12px',
-          marginBottom: '0.75rem',
-          border: '1px solid rgba(255,255,255,0.06)',
-          textAlign: 'left'
+          maxHeight: '280px',
+          overflowY: 'auto',
+          marginBottom: '1rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.8rem',
+          paddingRight: '0.5rem'
         }}>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>You said</div>
-          <div style={{ color: 'white', fontSize: '0.9rem' }}>"{transcript}"</div>
+          {history.map((msg, idx) => (
+            <div key={idx} className="fade-up" style={{
+              background: msg.role === 'user' ? 'rgba(255,255,255,0.03)' : 'rgba(139, 92, 246, 0.06)',
+              padding: '0.8rem 1rem',
+              borderRadius: '12px',
+              border: `1px solid ${msg.role === 'user' ? 'rgba(255,255,255,0.06)' : 'rgba(139, 92, 246, 0.12)'}`,
+              textAlign: 'left'
+            }}>
+              <div style={{ fontSize: '0.75rem', color: msg.role === 'user' ? 'var(--text-secondary)' : 'var(--accent-purple)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                {msg.role === 'user' ? 'You said' : 'Persona AI'}
+              </div>
+              <div style={{ color: 'white', fontSize: '0.9rem' }}>"{msg.content}"</div>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* AI Response */}
-      {aiResponse && (
-        <div className="fade-up" style={{
-          background: 'rgba(139, 92, 246, 0.06)',
-          padding: '0.8rem 1rem',
-          borderRadius: '12px',
-          border: '1px solid rgba(139, 92, 246, 0.12)',
-          textAlign: 'left'
-        }}>
-          <div style={{ fontSize: '0.75rem', color: 'var(--accent-purple)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>AI Response</div>
-          <div style={{ color: 'white', fontSize: '0.9rem' }}>"{aiResponse}"</div>
-        </div>
+      {/* Clear Chat Button */}
+      {history.length > 0 && (
+        <button 
+          onClick={clearHistory}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-secondary)',
+            fontSize: '0.8rem',
+            cursor: 'pointer',
+            textDecoration: 'underline',
+            marginBottom: '0.5rem'
+          }}
+        >
+          Clear Memory
+        </button>
       )}
 
       {/* Latency Badge */}
