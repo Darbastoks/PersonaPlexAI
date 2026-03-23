@@ -102,9 +102,45 @@ async function callG4F(userMessage) {
 }
 
 // ── TTS ────────────────────────────────────────────────────────
-// Using browser TTS for speed and zero-cost! Edge-tts required Python on Render, which caused crashes.
+const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY || '';
+
 async function generateTTS(text) {
-  return null; // The frontend will automatically fall back to window.speechSynthesis.speak()
+  if (!DEEPGRAM_API_KEY || DEEPGRAM_API_KEY.length < 10) return null; // Fallback to browser TTS
+
+  const payload = JSON.stringify({ text });
+
+  return new Promise((resolve) => {
+    const req = https.request({
+      hostname: 'api.deepgram.com',
+      path: '/v1/speak?model=aura-asteria-en&encoding=mp3', // Lightning-fast female voice
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Token ${DEEPGRAM_API_KEY}`,
+        'Content-Length': Buffer.byteLength(payload)
+      }
+    }, (res) => {
+      if (res.statusCode !== 200) {
+        console.error('Deepgram TTS failed with status: ' + res.statusCode);
+        return resolve(null); // Safely fallback if Deepgram fails or rate limits
+      }
+      
+      const chunks = [];
+      res.on('data', chunk => chunks.push(chunk));
+      res.on('end', () => {
+        const audioBuffer = Buffer.concat(chunks);
+        resolve(audioBuffer.toString('base64')); // Send instantly to frontend!
+      });
+    });
+
+    req.on('error', (err) => {
+      console.error('Deepgram Network Error:', err);
+      resolve(null);
+    });
+
+    req.write(payload);
+    req.end();
+  });
 }
 
 const stats = { totalRequests: 0, avgLlmMs: 0, avgTtsMs: 0, cacheHits: 0 };
