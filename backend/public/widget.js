@@ -49,11 +49,22 @@
   const statusDiv = document.getElementById('personaplex-status');
 
   // 5. Functions
-  const toggleChat = () => {
+  const toggleChat = async () => {
     chatWindow.style.display = chatWindow.style.display === 'flex' ? 'none' : 'flex';
     if (chatWindow.style.display === 'flex') {
       initAudio();
       input.focus();
+      
+      // PRE-REQUEST MIC PERMISSION TO "LOCK" IT IN FOR THE SESSION
+      try {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          stream.getTracks().forEach(track => track.stop()); // Stop immediately, we just wanted the permission
+          console.log("Mic permission locked for session.");
+        }
+      } catch (e) {
+        console.warn("Mic permission denied or unavailable.");
+      }
     }
   };
 
