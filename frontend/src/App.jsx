@@ -88,7 +88,7 @@ function App() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '0.9rem'
           }}>⚡</div>
-          PersonaPlex AI
+          ChatVora AI
         </div>
         <div className="nav-links">
           <a href="#features">Features</a>
