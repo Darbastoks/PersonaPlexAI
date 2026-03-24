@@ -13,8 +13,9 @@ const app = express();
 
 // ── Middleware ──────────────────────────────────────────────────
 app.use(compression());
-app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
+app.use(cors({ origin: '*' })); // Allow all origins for the embeddable widget
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Latency marker
 app.use((req, res, next) => {
@@ -53,12 +54,13 @@ const replyCache = new LRUCache(200);
 // ── Groq LLM ──────────────────────────────────────────────────
 const GROQ_API_KEY = process.env.GROQ_API_KEY || '';
 
-async function callGroq(userMessage) {
+async function callGroq(userMessage, history = []) {
   const systemPrompt = 'You are Persona, a highly intelligent AI agency receptionist. Answer concisely in 1-2 sentences.';
   const payload = JSON.stringify({
     model: 'llama-3.3-70b-versatile',
     messages: [
       { role: 'system', content: systemPrompt },
+      ...history,
       { role: 'user', content: userMessage }
     ],
     temperature: 0.7,
@@ -148,22 +150,25 @@ const stats = { totalRequests: 0, avgLlmMs: 0, avgTtsMs: 0, cacheHits: 0 };
 app.post('/api/chat', async (req, res) => {
   const started = Date.now();
   try {
-    const { message } = req.body;
+    const { message, history = [] } = req.body;
     if (!message) return res.status(400).json({ error: 'No message' });
 
     stats.totalRequests++;
     
-    const cached = replyCache.get(message.toLowerCase().trim());
-    if (cached) {
-      stats.cacheHits++;
-      return res.json({ ...cached, cached: true, latencyMs: Date.now() - started });
+    // Only cache pure zero-history queries
+    if (history.length === 0) {
+      const cached = replyCache.get(message.toLowerCase().trim());
+      if (cached) {
+        stats.cacheHits++;
+        return res.json({ ...cached, cached: true, latencyMs: Date.now() - started });
+      }
     }
 
     if (!GROQ_API_KEY || GROQ_API_KEY.length < 10) {
       return res.status(500).json({ error: 'Missing GROQ_API_KEY environment variable on Render!' });
     }
 
-    const aiReply = await callGroq(message);
+    const aiReply = await callGroq(message, history);
     const audio64 = await generateTTS(aiReply);
     const resp = { reply: aiReply, audioBase64: audio64, latencyMs: Date.now() - started };
 
