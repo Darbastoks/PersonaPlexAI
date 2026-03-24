@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PersonaPlex | Lead Manager</title>
+    <style>
+        body { margin: 0; font-family: sans-serif; background: #0f172a; color: white; padding: 40px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { background: linear-gradient(to right, #3b82f6, #8b5cf6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        table { width: 100%; border-collapse: collapse; margin-top: 30px; background: rgba(255,255,255,0.05); border-radius: 12px; overflow: hidden; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        th { background: rgba(255,255,255,0.1); color: #3b82f6; }
+        tr:hover { background: rgba(255,255,255,0.08); }
+        .status { color: #10b981; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Agency Lead Manager</h1>
+        <p>Real-time view of your customers and automated handoffs.</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Customer Name</th>
+                    <th>Email</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="leads-table">
+                <tr><td colspan="5" style="text-align:center;">Loading leads...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        async function loadLeads() {
+            try {
+                const resp = await fetch('/api/leads');
+                const leads = await resp.json();
+                const tbody = document.getElementById('leads-table');
+                
+                if (leads.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No sales yet. Get out there and pitch!</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = leads.map(l => `
+                    <tr>
+                        <td>${new Date(l.date).toLocaleDateString()}</td>
+                        <td>${l.name}</td>
+                        <td>${l.email}</td>
+                        <td>$${l.amount}</td>
+                        <td class="status">✅ Delivered</td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                document.getElementById('leads-table').innerHTML = '<tr><td colspan="5" style="text-align:center; color:#ef4444;">Error loading leads.</td></tr>';
+            }
+        }
+        loadLeads();
+    </script>
+</body>
+</html>

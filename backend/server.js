@@ -192,32 +192,46 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+const customersFile = path.join(__dirname, 'customers.json');
+
+// Ensure customers file exists
+if (!fs.existsSync(customersFile)) fs.writeFileSync(customersFile, JSON.stringify([]));
+
+const logCustomer = (data) => {
+  const customers = JSON.parse(fs.readFileSync(customersFile));
+  customers.push({ ...data, date: new Date().toISOString() });
+  fs.writeFileSync(customersFile, JSON.stringify(customers, null, 2));
+};
+
 const sendWelcomeEmail = async (email, customerName) => {
+  const hostname = process.env.RENDER_EXTERNAL_HOSTNAME || 'personaplex-backend.onrender.com';
   const mailOptions = {
     from: `"PersonaPlex AI" <${process.env.SENDER_EMAIL}>`,
     to: email,
     subject: `Welcome to PersonaPlex AI, ${customerName}! 🚀`,
     html: `
-      <div style="font-family: sans-serif; padding: 20px; color: #111;">
-        <h2>Your AI Assistant is Ready!</h2>
+      <div style="font-family: sans-serif; padding: 20px; color: #111; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px;">
+        <h2 style="color: #3b82f6;">Your AI Assistant is Ready!</h2>
         <p>Hi ${customerName},</p>
-        <p>Thank you for choosing PersonaPlex. Your personalized AI Receptionist has been provisioned.</p>
-        <h3>How to Install:</h3>
-        <p>Simply copy and paste this single line of code into the <b>&lt;head&gt;</b> of your website:</p>
-        <pre style="background: #f4f4f4; padding: 15px; border-radius: 8px;">&lt;script src="https://${process.env.RENDER_EXTERNAL_HOSTNAME || 'your-url'}.onrender.com/widget.js"&gt;&lt;/script&gt;</pre>
-        <p>If you have any questions, reply to this email.</p>
-        <p>Best regards,<br>The PersonaPlex Team</p>
+        <p>Thank you for choosing PersonaPlex. Your personalized AI Receptionist has been provisioned and is ready for duty.</p>
+        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+        <h3 style="color: #111;">How to Install:</h3>
+        <p>Simply copy and paste this one line of code into the <b>&lt;head&gt;</b> of your website:</p>
+        <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; font-family: monospace; font-size: 14px; overflow-x: auto;">
+          &lt;script src="https://${hostname}/widget.js"&gt;&lt;/script&gt;
+        </div>
+        <p style="margin-top: 20px;">Once added, the AI chat bubble will appear instantly. You can test it by clicking the bubble and saying "Hello."</p>
+        <p style="color: #64748b; font-size: 12px; margin-top: 30px;">Best regards,<br>The PersonaPlex Team</p>
       </div>
     `
   };
   return transporter.sendMail(mailOptions);
 };
 
-// ── Stripe Webhook (Automated Handoff) ──────────────────────────
+// ── Webhook Handler (Automated) ──────────────────────────
 app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   const sig = req.headers['stripe-signature'];
   let event;
-
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
@@ -226,20 +240,30 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-    const customerEmail = session.customer_details.email;
-    const customerName = session.customer_details.name || 'Value Client';
+    const email = session.customer_details.email;
+    const name = session.customer_details.name || 'Valued Client';
 
-    console.log(`💰 New Sale: ${customerEmail} | Sending Welcome Email...`);
+    console.log(`💰 New Sale: ${email} | Initiating Handoff...`);
+    logCustomer({ email, name, amount: session.amount_total / 100 });
     
     try {
-      await sendWelcomeEmail(customerEmail, customerName);
-      console.log(`✅ Automated Handoff Complete for ${customerEmail}`);
+      await sendWelcomeEmail(email, name);
+      console.log(`✅ Automated Handoff Delivered to ${email}`);
     } catch (e) {
-      console.error('Email failed but payment was successful:', e);
+      console.error('Email failed but sale was logged:', e.message);
     }
   }
-
   res.json({ received: true });
+});
+
+// ── Admin Leads Endpoint ───────────────────────────────────────
+app.get('/api/leads', (req, res) => {
+    try {
+        const customers = JSON.parse(fs.readFileSync(customersFile));
+        res.json(customers);
+    } catch (e) {
+        res.status(500).json({ error: "Could not load leads" });
+    }
 });
 
 app.get('/api/health', (req, res) => {
