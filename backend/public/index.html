@@ -19,21 +19,74 @@
     }
     .demo-container {
       text-align: center;
+      max-width: 600px;
     }
     h1 {
       font-size: 3rem;
       background: linear-gradient(to right, #3b82f6, #8b5cf6);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 40px;
+    }
+    .plan {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 20px;
+      border-radius: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .price { font-size: 2rem; font-weight: bold; }
+    .buy-btn {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 10px 20px;
+      background: #3b82f6;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
     }
   </style>
 </head>
 <body>
   <div class="demo-container">
-    <h1>Your Business Website</h1>
-    <p>This is a live demo of your embeddable AI Assistant.</p>
-    <p>Look at the bottom right corner! ↘️</p>
+    <h1>PersonaPlex AI Agency</h1>
+    <p>Your business-in-a-box is ready. Experience the future of reception.</p>
+    
+    <div class="pricing-grid">
+      <div class="plan">
+        <h3>One-Time Setup</h3>
+        <div class="price">$49</div>
+        <div class="buy-btn" onclick="checkout('price_1TEUE7IdIzCuyveZOmhxAYa5')">Buy Now</div>
+      </div>
+      <div class="plan">
+        <h3>Monthly Hosting</h3>
+        <div class="price">$29/mo</div>
+        <div class="buy-btn" onclick="checkout('price_1TEUE8IdIzCuyveZcgpGi4G3')">Subscribe</div>
+      </div>
+    </div>
+
+    <p style="margin-top: 40px; color: #666;">Look at the bottom right corner for the AI widget! ↘️</p>
   </div>
+
+  <script>
+    async function checkout(priceId) {
+      const resp = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ priceId })
+      });
+      const { url } = await resp.json();
+      window.location.href = url;
+    }
+  </script>
 
   <!-- ONE-LINE EMBED SCRIPT -->
   <script src="/widget.js"></script>

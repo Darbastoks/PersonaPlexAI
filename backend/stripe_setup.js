@@ -17,7 +17,7 @@ async function createProductCatalog() {
     });
 
     const setupPrice = await stripe.prices.create({
-      unit_amount: 49900, // $499.00
+      unit_amount: 4900, // $49.00 (Lowered from $499)
       currency: 'usd',
       product: setupFee.id,
     });
@@ -31,7 +31,7 @@ async function createProductCatalog() {
     });
 
     const monthlyPrice = await stripe.prices.create({
-      unit_amount: 14900, // $149.00
+      unit_amount: 2900, // $29.00 (Lowered from $149)
       currency: 'usd',
       recurring: { interval: 'month' },
       product: monthlySub.id,
