@@ -7,6 +7,9 @@ const path = require('path');
 const fs = require('fs');
 const https = require('https');
 const http = require('http');
+require('dotenv').config();
+
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_mock');
 
 const execPromise = util.promisify(exec);
 const app = express();
@@ -182,6 +185,27 @@ app.post('/api/chat', async (req, res) => {
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', uptime: process.uptime(), stats });
+});
+
+// ── Stripe Billing ─────────────────────────────────────────────
+app.get('/api/config', (req, res) => {
+  res.json({ publishableKey: process.env.STRIPE_PUBLISHABLE_KEY });
+});
+
+app.post('/api/create-checkout-session', async (req, res) => {
+  const { priceId } = req.body; // priceId for Setup Fee or Subscription
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: priceId.includes('sub') ? 'subscription' : 'payment',
+      payment_method_types: ['card'],
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: `${req.headers.origin}/success.html`,
+      cancel_url: `${req.headers.origin}/`,
+    });
+    res.json({ url: session.url });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 const PORT = process.env.PORT || 3000;

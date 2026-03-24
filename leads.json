@@ -1,0 +1,17 @@
+[
+    {
+        "name": "Elite Dental Care",
+        "website": "https://example-dentist.com",
+        "email": "contact@example-dental.com"
+    },
+    {
+        "name": "Precision HVAC Services",
+        "website": "https://precision-hvac.com",
+        "email": "info@precision-hvac.com"
+    },
+    {
+        "name": "Oak & Iron Law Firm",
+        "website": "https://oilaw.com",
+        "email": "hello@oilaw.com"
+    }
+]
