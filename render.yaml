@@ -1,7 +1,7 @@
 services:
   # Backend Node.js App
   - type: web
-    name: personaplex-backend
+    name: chatvora
     env: node
     plan: free
     rootDir: backend
@@ -21,7 +21,7 @@ services:
 
   # Frontend React SPA
   - type: web
-    name: personaplex-frontend
+    name: chatvora-frontend
     env: static
     plan: free
     rootDir: frontend
