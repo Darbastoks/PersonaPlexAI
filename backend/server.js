@@ -204,7 +204,7 @@ const logCustomer = (data) => {
 };
 
 const sendWelcomeEmail = async (email, customerName) => {
-  const hostname = process.env.RENDER_EXTERNAL_HOSTNAME || 'personaplex-backend.onrender.com';
+  const hostname = process.env.RENDER_EXTERNAL_HOSTNAME || 'chatvora.onrender.com';
   const mailOptions = {
     from: `"ChatVora AI" <${process.env.SENDER_EMAIL}>`,
     to: email,

@@ -17,7 +17,7 @@ def send_pitch(to_email, business_name):
         return False
 
     subject = f"Quick question about {business_name}'s reception"
-    base_url = os.getenv('VITE_API_URL', 'https://personaplex-backend.onrender.com')
+    base_url = os.getenv('VITE_API_URL', 'https://chatvora.onrender.com')
 
     # Professional HTML Pitch
     body = f"""
