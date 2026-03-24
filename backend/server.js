@@ -183,6 +183,65 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
+// ── Email Configuration ─────────────────────────────────────────
+const transporter = nodemailer.createTransport({
+  service: 'gmail', // or your provider
+  auth: {
+    user: process.env.SENDER_EMAIL,
+    pass: process.env.SENDER_PASSWORD // Use "App Password" for Gmail
+  }
+});
+
+const sendWelcomeEmail = async (email, customerName) => {
+  const mailOptions = {
+    from: `"PersonaPlex AI" <${process.env.SENDER_EMAIL}>`,
+    to: email,
+    subject: `Welcome to PersonaPlex AI, ${customerName}! 🚀`,
+    html: `
+      <div style="font-family: sans-serif; padding: 20px; color: #111;">
+        <h2>Your AI Assistant is Ready!</h2>
+        <p>Hi ${customerName},</p>
+        <p>Thank you for choosing PersonaPlex. Your personalized AI Receptionist has been provisioned.</p>
+        <h3>How to Install:</h3>
+        <p>Simply copy and paste this single line of code into the <b>&lt;head&gt;</b> of your website:</p>
+        <pre style="background: #f4f4f4; padding: 15px; border-radius: 8px;">&lt;script src="https://${process.env.RENDER_EXTERNAL_HOSTNAME || 'your-url'}.onrender.com/widget.js"&gt;&lt;/script&gt;</pre>
+        <p>If you have any questions, reply to this email.</p>
+        <p>Best regards,<br>The PersonaPlex Team</p>
+      </div>
+    `
+  };
+  return transporter.sendMail(mailOptions);
+};
+
+// ── Stripe Webhook (Automated Handoff) ──────────────────────────
+app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const customerEmail = session.customer_details.email;
+    const customerName = session.customer_details.name || 'Value Client';
+
+    console.log(`💰 New Sale: ${customerEmail} | Sending Welcome Email...`);
+    
+    try {
+      await sendWelcomeEmail(customerEmail, customerName);
+      console.log(`✅ Automated Handoff Complete for ${customerEmail}`);
+    } catch (e) {
+      console.error('Email failed but payment was successful:', e);
+    }
+  }
+
+  res.json({ received: true });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', uptime: process.uptime(), stats });
 });
