@@ -206,14 +206,14 @@ const logCustomer = (data) => {
 const sendWelcomeEmail = async (email, customerName) => {
   const hostname = process.env.RENDER_EXTERNAL_HOSTNAME || 'personaplex-backend.onrender.com';
   const mailOptions = {
-    from: `"PersonaPlex AI" <${process.env.SENDER_EMAIL}>`,
+    from: `"ChatVora AI" <${process.env.SENDER_EMAIL}>`,
     to: email,
-    subject: `Welcome to PersonaPlex AI, ${customerName}! 🚀`,
+    subject: `Welcome to ChatVora AI, ${customerName}! 🚀`,
     html: `
       <div style="font-family: sans-serif; padding: 20px; color: #111; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px;">
         <h2 style="color: #3b82f6;">Your AI Assistant is Ready!</h2>
         <p>Hi ${customerName},</p>
-        <p>Thank you for choosing PersonaPlex. Your personalized AI Receptionist has been provisioned and is ready for duty.</p>
+        <p>Thank you for choosing ChatVora. Your personalized AI Receptionist has been provisioned and is ready for duty.</p>
         <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
         <h3 style="color: #111;">How to Install:</h3>
         <p>Simply copy and paste this one line of code into the <b>&lt;head&gt;</b> of your website:</p>
@@ -221,7 +221,7 @@ const sendWelcomeEmail = async (email, customerName) => {
           &lt;script src="https://${hostname}/widget.js"&gt;&lt;/script&gt;
         </div>
         <p style="margin-top: 20px;">Once added, the AI chat bubble will appear instantly. You can test it by clicking the bubble and saying "Hello."</p>
-        <p style="color: #64748b; font-size: 12px; margin-top: 30px;">Best regards,<br>The PersonaPlex Team</p>
+        <p style="color: #64748b; font-size: 12px; margin-top: 30px;">Best regards,<br>The ChatVora Team</p>
       </div>
     `
   };

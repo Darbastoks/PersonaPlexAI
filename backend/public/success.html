@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Payment Successful | PersonaPlex AI</title>
+  <title>Payment Successful | ChatVora</title>
   <style>
     :root {
       --bg: #0f172a;
@@ -23,7 +23,7 @@
       justify-content: center;
       text-align: center;
     }
-    .container {
+    .success-card {
       max-width: 500px;
       padding: 3rem;
       background: rgba(255, 255, 255, 0.03);
@@ -71,10 +71,18 @@
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="success-card">
     <div class="icon">✅</div>
-    <h1>Payment Successful!</h1>
-    <p>Thank you for choosing PersonaPlex. Your AI Receptionist is being provisioned. You will receive an email shortly with your custom embed script and dashboard credentials.</p>
+    <h1>Welcome to ChatVora!</h1>
+    <p>Your payment was successful and your account is being provisioned.</p>
+    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; margin: 25px 0; text-align: left;">
+      <p style="margin: 0; color: #94a3b8; font-size: 0.9rem;">Next Steps:</p>
+      <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #cbd5e1;">
+        <li>Check your email for the 1-line install script.</li>
+        <li>Paste the script into your website's <b>&lt;head&gt;</b>.</li>
+        <li>Your AI assistant will appear instantly!</li>
+      </ul>
+    </div>
     <a href="/" class="btn">Back to Dashboard</a>
   </div>
 </body>

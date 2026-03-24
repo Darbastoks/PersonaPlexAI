@@ -12,7 +12,7 @@ async function createProductCatalog() {
 
     // 1. One-time Setup Fee
     const setupFee = await stripe.products.create({
-      name: 'AI Agency Setup Fee',
+      name: 'ChatVora AI Setup Fee',
       description: 'Custom AI training, widget integration, and account configuration.',
     });
 

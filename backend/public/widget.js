@@ -21,7 +21,7 @@
     <div class="personaplex-chat-window" id="personaplex-chat">
       <div class="personaplex-header">
         <div style="width: 30px; height: 30px; border-radius: 50%; background: var(--personaplex-primary); display: flex; align-items: center; justify-content: center;">🤖</div>
-        <h4>Persona AI Assistant</h4>
+        <h4>ChatVora AI Assistant</h4>
         <div style="margin-left: auto; cursor: pointer;" id="personaplex-close">✕</div>
       </div>
       <div class="personaplex-content" id="personaplex-messages">
