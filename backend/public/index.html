@@ -57,36 +57,24 @@
 </head>
 <body>
   <div class="demo-container">
-    <h1>PersonaPlex AI Agency</h1>
+    <h1>ChatVora AI</h1>
     <p>Your business-in-a-box is ready. Experience the future of reception.</p>
     
     <div class="pricing-grid">
       <div class="plan">
         <h3>One-Time Setup</h3>
         <div class="price">$49</div>
-        <div class="buy-btn" onclick="checkout('price_1TEUE7IdIzCuyveZOmhxAYa5')">Buy Now</div>
+        <a href="/onboard.html" class="buy-btn">Get Started</a>
       </div>
       <div class="plan">
         <h3>Monthly Hosting</h3>
         <div class="price">$29/mo</div>
-        <div class="buy-btn" onclick="checkout('price_1TEUE8IdIzCuyveZcgpGi4G3')">Subscribe</div>
+        <a href="/onboard.html" class="buy-btn">Subscribe</a>
       </div>
     </div>
 
     <p style="margin-top: 40px; color: #666;">Look at the bottom right corner for the AI widget! ↘️</p>
   </div>
-
-  <script>
-    async function checkout(priceId) {
-      const resp = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceId })
-      });
-      const { url } = await resp.json();
-      window.location.href = url;
-    }
-  </script>
 
   <!-- ONE-LINE EMBED SCRIPT -->
   <script src="/widget.js"></script>

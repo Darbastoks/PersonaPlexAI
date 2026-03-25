@@ -1,7 +1,7 @@
 {
-  "name": "personaplex-backend",
+  "name": "chatvora-backend",
   "version": "1.0.0",
-  "description": "PersonaPlex AI Voice Receptionist - Backend",
+  "description": "ChatVora AI Voice Receptionist - Backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

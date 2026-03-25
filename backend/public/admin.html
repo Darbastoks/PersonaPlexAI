@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatVora | Admin Panel</title>
+  <style>
+    :root { --bg: #0f172a; --card: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.1); --blue: #3b82f6; --purple: #8b5cf6; --green: #10b981; --red: #ef4444; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #e2e8f0; min-height: 100vh; }
+    .topbar { padding: 1rem 2rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 1rem; }
+    .topbar h1 { font-size: 1.3rem; background: linear-gradient(135deg, var(--blue), var(--purple)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .topbar .badge { background: var(--green); color: #000; padding: 3px 10px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; }
+    .main { padding: 2rem; max-width: 1100px; margin: 0 auto; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+    .action-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; }
+    .action-card h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+    .action-card p { font-size: 0.85rem; color: #94a3b8; margin-bottom: 1rem; }
+    .action-card .row { display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1rem; }
+    .action-card input, .action-card select { padding: 0.6rem 0.8rem; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 8px; color: #e2e8f0; font-size: 0.9rem; outline: none; flex: 1; }
+    .btn { padding: 0.6rem 1.2rem; border: none; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+    .btn-blue { background: var(--blue); color: white; }
+    .btn-purple { background: var(--purple); color: white; }
+    .btn-green { background: var(--green); color: #000; }
+    .btn:hover { opacity: 0.85; transform: translateY(-1px); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .log { background: #0a0e1a; border: 1px solid var(--border); border-radius: 10px; padding: 1rem; font-family: monospace; font-size: 0.8rem; color: #94a3b8; max-height: 160px; overflow-y: auto; white-space: pre-wrap; margin-top: 0.75rem; }
+    h2 { font-size: 1.1rem; margin-bottom: 1rem; color: #cbd5e1; }
+    table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+    th { background: rgba(255,255,255,0.08); color: var(--blue); font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; }
+    tr:hover { background: rgba(255,255,255,0.03); }
+    .status-badge { padding: 3px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; }
+    .status-paid { background: rgba(16,185,129,0.15); color: var(--green); }
+    .status-pending { background: rgba(234,179,8,0.15); color: #eab308; }
+    .tab-bar { display: flex; gap: 0; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+    .tab { padding: 0.75rem 1.5rem; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: #64748b; border-bottom: 2px solid transparent; transition: all 0.3s; }
+    .tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .empty { text-align: center; padding: 3rem; color: #475569; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <h1>⚡ ChatVora Admin</h1>
+    <span class="badge">LIVE</span>
+  </div>
+
+  <div class="main">
+    <!-- Action Cards -->
+    <div class="grid">
+      <div class="action-card">
+        <h3>🔍 Lead Scraper</h3>
+        <p>Find local businesses that need AI receptionists.</p>
+        <div class="row">
+          <input type="text" id="scrapeIndustry" placeholder="Industry (e.g. Dentists)">
+          <input type="text" id="scrapeLocation" placeholder="Location (e.g. London)">
+        </div>
+        <button class="btn btn-blue" id="scrapeBtn" onclick="runScrape()">🚀 Scrape Leads</button>
+        <div class="log" id="scrapeLog">Ready. Enter an industry and location, then click Scrape.</div>
+      </div>
+
+      <div class="action-card">
+        <h3>📧 Outreach Engine</h3>
+        <p>Send your AI demo pitch to all scraped leads.</p>
+        <button class="btn btn-purple" id="outreachBtn" onclick="runOutreach()">📨 Send Pitches</button>
+        <div class="log" id="outreachLog">Ready. Scrape leads first, then click Send Pitches.</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab('customers')">💰 Customers</div>
+      <div class="tab" onclick="switchTab('onboarding')">📋 Intake Forms</div>
+      <div class="tab" onclick="switchTab('leads')">🔍 Scraped Leads</div>
+    </div>
+
+    <!-- Customers Tab -->
+    <div class="tab-content active" id="tab-customers">
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead>
+        <tbody id="customerTable"><tr><td colspan="5" class="empty">Loading...</td></tr></tbody>
+      </table>
+    </div>
+
+    <!-- Intake Forms Tab -->
+    <div class="tab-content" id="tab-onboarding">
+      <table>
+        <thead><tr><th>Business</th><th>Industry</th><th>Email</th><th>Plan</th><th>Date</th></tr></thead>
+        <tbody id="onboardTable"><tr><td colspan="5" class="empty">Loading...</td></tr></tbody>
+      </table>
+    </div>
+
+    <!-- Scraped Leads Tab -->
+    <div class="tab-content" id="tab-leads">
+      <table>
+        <thead><tr><th>Business</th><th>Website</th><th>Email</th><th>Pitched?</th></tr></thead>
+        <tbody id="leadsTable"><tr><td colspan="4" class="empty">No leads scraped yet.</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // ── Tab Switching ────────────────────────────────────
+    function switchTab(name) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('tab-' + name).classList.add('active');
+    }
+
+    // ── Load Customers ──────────────────────────────────
+    async function loadCustomers() {
+      try {
+        const resp = await fetch('/api/leads');
+        const data = await resp.json();
+        const tbody = document.getElementById('customerTable');
+        if (!data.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">No customers yet. Your first sale will appear here!</td></tr>'; return; }
+        tbody.innerHTML = data.map(c => `
+          <tr>
+            <td>${c.name || 'N/A'}</td>
+            <td>${c.email}</td>
+            <td>$${c.amount || 0}</td>
+            <td>${new Date(c.date).toLocaleDateString()}</td>
+            <td><span class="status-badge status-paid">Paid</span></td>
+          </tr>
+        `).join('');
+      } catch(e) { document.getElementById('customerTable').innerHTML = '<tr><td colspan="5" class="empty">Could not load data.</td></tr>'; }
+    }
+
+    // ── Load Onboarding Submissions ─────────────────────
+    async function loadOnboarding() {
+      try {
+        const resp = await fetch('/api/admin/onboarding');
+        const data = await resp.json();
+        const tbody = document.getElementById('onboardTable');
+        if (!data.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">No intake forms submitted yet.</td></tr>'; return; }
+        tbody.innerHTML = data.map(o => `
+          <tr>
+            <td>${o.businessName}</td>
+            <td>${o.industry}</td>
+            <td>${o.email}</td>
+            <td>${o.plan}</td>
+            <td>${new Date(o.date).toLocaleDateString()}</td>
+          </tr>
+        `).join('');
+      } catch(e) { document.getElementById('onboardTable').innerHTML = '<tr><td colspan="5" class="empty">Could not load data.</td></tr>'; }
+    }
+
+    // ── Scrape Leads ────────────────────────────────────
+    async function runScrape() {
+      const btn = document.getElementById('scrapeBtn');
+      const log = document.getElementById('scrapeLog');
+      const industry = document.getElementById('scrapeIndustry').value || 'Dentists';
+      const location = document.getElementById('scrapeLocation').value || 'London';
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Scraping...';
+      log.textContent = `🔍 Searching for ${industry} in ${location}...\n`;
+
+      try {
+        const resp = await fetch(`/api/admin/scrape?industry=${encodeURIComponent(industry)}&location=${encodeURIComponent(location)}`);
+        const data = await resp.json();
+        log.textContent += `✅ Found ${data.count} leads!\n`;
+        data.leads.forEach(l => { log.textContent += `  → ${l.name} (${l.email})\n`; });
+        log.textContent += `\nReady to send outreach pitches.`;
+        loadScrapedLeads();
+      } catch(e) {
+        log.textContent += `❌ Error: ${e.message}`;
+      }
+      btn.disabled = false;
+      btn.textContent = '🚀 Scrape Leads';
+    }
+
+    // ── Send Outreach ───────────────────────────────────
+    async function runOutreach() {
+      const btn = document.getElementById('outreachBtn');
+      const log = document.getElementById('outreachLog');
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Sending...';
+      log.textContent = '📧 Starting outreach engine...\n';
+
+      try {
+        const resp = await fetch('/api/admin/outreach', { method: 'POST' });
+        const data = await resp.json();
+        log.textContent += `✅ ${data.sent}/${data.total} emails sent successfully!\n`;
+        if (data.errors > 0) log.textContent += `⚠️ ${data.errors} failed (check server logs).\n`;
+        log.textContent += `\nOutreach complete!`;
+      } catch(e) {
+        log.textContent += `❌ Error: ${e.message}`;
+      }
+      btn.disabled = false;
+      btn.textContent = '📨 Send Pitches';
+    }
+
+    // ── Load Scraped Leads ──────────────────────────────
+    async function loadScrapedLeads() {
+      try {
+        const resp = await fetch('/api/admin/scraped-leads');
+        const data = await resp.json();
+        const tbody = document.getElementById('leadsTable');
+        if (!data.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty">No leads scraped yet. Use the scraper above!</td></tr>'; return; }
+        tbody.innerHTML = data.map(l => `
+          <tr>
+            <td>${l.name}</td>
+            <td><a href="${l.website}" target="_blank" style="color:var(--blue)">${l.website}</a></td>
+            <td>${l.email}</td>
+            <td>${l.pitched ? '<span class="status-badge status-paid">Yes</span>' : '<span class="status-badge status-pending">No</span>'}</td>
+          </tr>
+        `).join('');
+      } catch(e) { document.getElementById('leadsTable').innerHTML = '<tr><td colspan="4" class="empty">Could not load leads.</td></tr>'; }
+    }
+
+    // ── Init ────────────────────────────────────────────
+    loadCustomers();
+    loadOnboarding();
+    loadScrapedLeads();
+  </script>
+</body>
+</html>

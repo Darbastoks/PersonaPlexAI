@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const compression = require('compression');
+const nodemailer = require('nodemailer');
 const { exec } = require('child_process');
 const util = require('util');
 const path = require('path');
@@ -258,12 +259,12 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
 
 // ── Admin Leads Endpoint ───────────────────────────────────────
 app.get('/api/leads', (req, res) => {
-    try {
-        const customers = JSON.parse(fs.readFileSync(customersFile));
-        res.json(customers);
-    } catch (e) {
-        res.status(500).json({ error: "Could not load leads" });
-    }
+  try {
+    const customers = JSON.parse(fs.readFileSync(customersFile));
+    res.json(customers);
+  } catch (e) {
+    res.status(500).json({ error: "Could not load leads" });
+  }
 });
 
 app.get('/api/health', (req, res) => {
@@ -276,14 +277,14 @@ app.get('/api/config', (req, res) => {
 });
 
 app.post('/api/create-checkout-session', async (req, res) => {
-  const { priceId } = req.body; // priceId for Setup Fee or Subscription
+  const { priceId } = req.body;
   try {
     const session = await stripe.checkout.sessions.create({
       mode: priceId.includes('sub') ? 'subscription' : 'payment',
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${req.headers.origin}/success.html`,
-      cancel_url: `${req.headers.origin}/`,
+      success_url: `${req.headers.origin || 'https://chatvora.onrender.com'}/success.html`,
+      cancel_url: `${req.headers.origin || 'https://chatvora.onrender.com'}/`,
     });
     res.json({ url: session.url });
   } catch (e) {
@@ -291,7 +292,146 @@ app.post('/api/create-checkout-session', async (req, res) => {
   }
 });
 
+// ── Onboarding Data ───────────────────────────────────────────
+const onboardingFile = path.join(__dirname, 'onboarding.json');
+const scrapedLeadsFile = path.join(__dirname, 'scraped_leads.json');
+
+if (!fs.existsSync(onboardingFile)) fs.writeFileSync(onboardingFile, JSON.stringify([]));
+if (!fs.existsSync(scrapedLeadsFile)) fs.writeFileSync(scrapedLeadsFile, JSON.stringify([]));
+
+// ── Client Intake Form → Stripe ──────────────────────────────
+app.post('/api/onboard', async (req, res) => {
+  try {
+    const data = req.body;
+    // Save intake form data
+    const submissions = JSON.parse(fs.readFileSync(onboardingFile));
+    submissions.push({ ...data, date: new Date().toISOString() });
+    fs.writeFileSync(onboardingFile, JSON.stringify(submissions, null, 2));
+    console.log(`📋 New intake form: ${data.businessName} (${data.industry})`);
+
+    // Determine which Stripe price to use
+    const priceId = data.plan === 'subscription'
+      ? (process.env.STRIPE_PRICE_SUBSCRIPTION || 'price_1TEUE8IdIzCuyveZcgpGi4G3')
+      : (process.env.STRIPE_PRICE_SETUP || 'price_1TEUE7IdIzCuyveZOmhxAYa5');
+
+    const mode = data.plan === 'subscription' ? 'subscription' : 'payment';
+
+    const session = await stripe.checkout.sessions.create({
+      mode,
+      payment_method_types: ['card'],
+      customer_email: data.email,
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: `${req.headers.origin || 'https://chatvora.onrender.com'}/success.html`,
+      cancel_url: `${req.headers.origin || 'https://chatvora.onrender.com'}/onboard.html`,
+      metadata: {
+        businessName: data.businessName,
+        industry: data.industry,
+        website: data.website || '',
+        voice: data.voice || 'female-us'
+      }
+    });
+
+    res.json({ url: session.url });
+  } catch (e) {
+    console.error('Onboard error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── Admin: Get Onboarding Submissions ─────────────────────────
+app.get('/api/admin/onboarding', (req, res) => {
+  try {
+    const data = JSON.parse(fs.readFileSync(onboardingFile));
+    res.json(data);
+  } catch (e) {
+    res.json([]);
+  }
+});
+
+// ── Admin: Scrape Leads (In-Process) ──────────────────────────
+app.get('/api/admin/scrape', (req, res) => {
+  const industry = req.query.industry || 'Dentists';
+  const location = req.query.location || 'London';
+
+  console.log(`🔍 Admin scrape: ${industry} in ${location}`);
+
+  // Generate realistic demo leads based on industry
+  const templates = {
+    'Dentists': [
+      { name: 'Bright Smile Dental', website: 'https://brightsmile.com', email: 'info@brightsmile.com' },
+      { name: 'City Dental Practice', website: 'https://citydental.co.uk', email: 'hello@citydental.co.uk' },
+      { name: 'Premier Dental Care', website: 'https://premierdental.com', email: 'contact@premierdental.com' },
+    ],
+    'default': [
+      { name: `${location} ${industry} Pro`, website: `https://${industry.toLowerCase().replace(/\s/g,'-')}-${location.toLowerCase()}.com`, email: `info@${industry.toLowerCase().replace(/\s/g,'-')}-${location.toLowerCase()}.com` },
+      { name: `Elite ${industry}`, website: `https://elite${industry.toLowerCase().replace(/\s/g,'')}.com`, email: `hello@elite${industry.toLowerCase().replace(/\s/g,'')}.com` },
+      { name: `${location} Best ${industry}`, website: `https://best${industry.toLowerCase().replace(/\s/g,'')}.com`, email: `contact@best${industry.toLowerCase().replace(/\s/g,'')}.com` },
+    ]
+  };
+
+  const leads = (templates[industry] || templates['default']).map(l => ({ ...l, pitched: false, scrapedAt: new Date().toISOString() }));
+
+  // Save scraped leads
+  let existing = [];
+  try { existing = JSON.parse(fs.readFileSync(scrapedLeadsFile)); } catch(e) {}
+  const merged = [...existing, ...leads];
+  fs.writeFileSync(scrapedLeadsFile, JSON.stringify(merged, null, 2));
+
+  res.json({ count: leads.length, leads });
+});
+
+// ── Admin: Get Scraped Leads ──────────────────────────────────
+app.get('/api/admin/scraped-leads', (req, res) => {
+  try {
+    const data = JSON.parse(fs.readFileSync(scrapedLeadsFile));
+    res.json(data);
+  } catch (e) {
+    res.json([]);
+  }
+});
+
+// ── Admin: Send Outreach ──────────────────────────────────────
+app.post('/api/admin/outreach', async (req, res) => {
+  let leads = [];
+  try { leads = JSON.parse(fs.readFileSync(scrapedLeadsFile)); } catch(e) {}
+
+  const unpitched = leads.filter(l => !l.pitched);
+  if (unpitched.length === 0) return res.json({ sent: 0, total: 0, errors: 0, message: 'No unpitched leads found. Scrape some first!' });
+
+  const hostname = process.env.RENDER_EXTERNAL_HOSTNAME || 'chatvora.onrender.com';
+  let sent = 0, errors = 0;
+
+  for (const lead of unpitched) {
+    try {
+      await transporter.sendMail({
+        from: `"ChatVora AI" <${process.env.SENDER_EMAIL}>`,
+        to: lead.email,
+        subject: `Quick question about ${lead.name}'s reception`,
+        html: `
+          <div style="font-family: sans-serif; line-height: 1.6; color: #333;">
+            <p>Hi there,</p>
+            <p>I was looking at <b>${lead.name}</b> and noticed you have a great reputation. I built a custom AI Voice Assistant specifically for local businesses like yours to handle missed calls and booking inquiries 24/7.</p>
+            <p>I'd love for you to hear what it sounds like:</p>
+            <p><a href="https://${hostname}/index.html" style="background: #3b82f6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Listen to the AI Demo</a></p>
+            <p>It takes about 30 seconds to hear it in action. If you like it, we can have it live on your site by tomorrow.</p>
+            <p>Best regards,<br><b>The ChatVora Team</b></p>
+          </div>
+        `
+      });
+      lead.pitched = true;
+      sent++;
+    } catch (e) {
+      console.error(`Outreach failed for ${lead.email}:`, e.message);
+      errors++;
+    }
+  }
+
+  // Update leads file with pitched status
+  fs.writeFileSync(scrapedLeadsFile, JSON.stringify(leads, null, 2));
+  res.json({ sent, total: unpitched.length, errors });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Backend on ${PORT}`);
+  console.log(`🚀 ChatVora Backend on ${PORT}`);
 });

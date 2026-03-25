@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatVora | Get Started</title>
+  <style>
+    :root { --bg: #0f172a; --card: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.1); --blue: #3b82f6; --purple: #8b5cf6; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #e2e8f0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .container { max-width: 600px; width: 100%; }
+    .logo { text-align: center; margin-bottom: 2rem; }
+    .logo h1 { font-size: 2rem; background: linear-gradient(135deg, var(--blue), var(--purple)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .logo p { color: #94a3b8; margin-top: 0.5rem; font-size: 0.95rem; }
+    .form-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; backdrop-filter: blur(20px); }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #94a3b8; margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.75rem 1rem; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 10px; color: #e2e8f0; font-size: 0.95rem; outline: none; transition: border 0.3s; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--blue); }
+    .form-group select { cursor: pointer; }
+    .form-group select option { background: #1e293b; }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .submit-btn { width: 100%; padding: 0.9rem; background: linear-gradient(135deg, var(--blue), var(--purple)); color: white; border: none; border-radius: 10px; font-size: 1.05rem; font-weight: 700; cursor: pointer; margin-top: 0.5rem; transition: opacity 0.3s, transform 0.2s; }
+    .submit-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .plan-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+    .plan-option { padding: 1rem; background: rgba(255,255,255,0.04); border: 2px solid var(--border); border-radius: 12px; cursor: pointer; text-align: center; transition: all 0.3s; }
+    .plan-option.active { border-color: var(--blue); background: rgba(59,130,246,0.1); }
+    .plan-option h3 { font-size: 1.1rem; margin-bottom: 0.3rem; }
+    .plan-option .price { font-size: 1.5rem; font-weight: 800; background: linear-gradient(135deg, var(--blue), var(--purple)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .plan-option .desc { font-size: 0.75rem; color: #64748b; margin-top: 0.3rem; }
+    .secure { text-align: center; margin-top: 1rem; font-size: 0.8rem; color: #475569; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <h1>⚡ ChatVora AI</h1>
+      <p>Tell us about your business and we'll build your AI assistant.</p>
+    </div>
+
+    <div class="form-card">
+      <form id="onboardForm">
+        <!-- Plan Selection -->
+        <label style="font-size:0.85rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.75rem;display:block;">Choose Your Plan</label>
+        <div class="plan-selector">
+          <div class="plan-option active" onclick="selectPlan(this, 'setup')" data-plan="setup">
+            <h3>🚀 Setup</h3>
+            <div class="price">$49</div>
+            <div class="desc">One-time setup & configuration</div>
+          </div>
+          <div class="plan-option" onclick="selectPlan(this, 'subscription')" data-plan="subscription">
+            <h3>💎 Monthly</h3>
+            <div class="price">$29/mo</div>
+            <div class="desc">Hosting, updates & support</div>
+          </div>
+        </div>
+
+        <!-- Business Details -->
+        <div class="row">
+          <div class="form-group">
+            <label>Business Name *</label>
+            <input type="text" name="businessName" required placeholder="e.g. Elite Dental Care">
+          </div>
+          <div class="form-group">
+            <label>Industry *</label>
+            <select name="industry" required>
+              <option value="">Select...</option>
+              <option>Dental / Healthcare</option>
+              <option>Legal / Law Firm</option>
+              <option>Real Estate</option>
+              <option>Beauty / Salon</option>
+              <option>HVAC / Home Services</option>
+              <option>Restaurant / Food</option>
+              <option>Fitness / Gym</option>
+              <option>Automotive</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Website URL</label>
+          <input type="url" name="website" placeholder="https://yourbusiness.com">
+        </div>
+
+        <div class="row">
+          <div class="form-group">
+            <label>Contact Email *</label>
+            <input type="email" name="email" required placeholder="you@business.com">
+          </div>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="tel" name="phone" placeholder="+1 555 000 0000">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Business Hours</label>
+          <input type="text" name="hours" placeholder="e.g. Mon-Fri 9AM-6PM, Sat 10AM-2PM">
+        </div>
+
+        <div class="form-group">
+          <label>Key Services (comma separated)</label>
+          <input type="text" name="services" placeholder="e.g. Teeth Cleaning, Whitening, Root Canal">
+        </div>
+
+        <div class="form-group">
+          <label>What should the AI say when greeting callers?</label>
+          <textarea name="greeting" placeholder="e.g. Hi! Thanks for calling Elite Dental Care. How can I help you today?"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Preferred AI Voice</label>
+          <select name="voice">
+            <option value="female-us">Female (US)</option>
+            <option value="female-uk">Female (UK)</option>
+            <option value="male-us">Male (US)</option>
+            <option value="male-uk">Male (UK)</option>
+          </select>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">Continue to Payment →</button>
+      </form>
+    </div>
+    <p class="secure">🔒 Secured by Stripe. Your data is encrypted.</p>
+  </div>
+
+  <script>
+    let selectedPlan = 'setup';
+
+    function selectPlan(el, plan) {
+      document.querySelectorAll('.plan-option').forEach(p => p.classList.remove('active'));
+      el.classList.add('active');
+      selectedPlan = plan;
+    }
+
+    document.getElementById('onboardForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Processing...';
+
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData.entries());
+      data.plan = selectedPlan;
+
+      try {
+        const resp = await fetch('/api/onboard', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const result = await resp.json();
+        if (result.url) {
+          window.location.href = result.url;
+        } else {
+          alert('Something went wrong. Please try again.');
+          btn.disabled = false;
+          btn.textContent = 'Continue to Payment →';
+        }
+      } catch (err) {
+        alert('Connection error. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'Continue to Payment →';
+      }
+    });
+  </script>
+</body>
+</html>

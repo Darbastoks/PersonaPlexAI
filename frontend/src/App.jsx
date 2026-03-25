@@ -207,7 +207,7 @@ function App() {
           <a href="#dashboard">Dashboard</a>
           <a href="#pricing">Pricing</a>
         </div>
-        <p>© 2026 PersonaPlex AI — Built with ⚡ by Rokas</p>
+        <p>© 2026 ChatVora AI — Built with ⚡ by Rokas</p>
       </footer>
     </>
   );
