@@ -11,6 +11,10 @@
   link.href = `${BASE_URL}/widget.css`;
   document.head.appendChild(link);
 
+  // Don't show widget on ChatVora's own marketing site
+  const ownDomains = ['chatvora.onrender.com', 'localhost'];
+  if (ownDomains.includes(window.location.hostname)) return;
+
   // 2. State
   let history = [];
   let isRecording = false;
@@ -19,6 +23,26 @@
   let sessionId = 'session_' + Date.now();
   let messageCount = 0;
   let leadCaptured = false;
+  let clientSystemPrompt = null; // Per-client custom AI prompt
+
+  // Fetch per-client config (custom greeting + AI prompt)
+  async function loadClientConfig() {
+    if (CLIENT_KEY === 'default') return;
+    try {
+      const resp = await fetch(`${BASE_URL}/api/client-config?key=${CLIENT_KEY}`);
+      const config = await resp.json();
+      if (config.systemPrompt) clientSystemPrompt = config.systemPrompt;
+      if (config.greeting) {
+        const firstMsg = document.querySelector('.personaplex-message.personaplex-ai');
+        if (firstMsg) firstMsg.textContent = config.greeting;
+      }
+      if (config.businessName) {
+        const headerTitle = container.querySelector('h4');
+        if (headerTitle) headerTitle.textContent = config.businessName;
+      }
+    } catch (e) {}
+  }
+  loadClientConfig();
 
   // 3. UI Structure
   const container = document.createElement('div');
@@ -196,7 +220,7 @@
       const resp = await fetch(`${BASE_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, history: currentHistory })
+        body: JSON.stringify({ message: text, history: currentHistory, clientKey: CLIENT_KEY, systemPrompt: clientSystemPrompt })
       });
       const data = await resp.json();
       if (data.reply) {

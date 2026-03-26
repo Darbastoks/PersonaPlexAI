@@ -73,7 +73,31 @@ const DEFAULT_SYSTEM_PROMPT = `You are an AI chatbot assistant for a local busin
 6. If asked about something you don't know, say "Great question! Let me get someone from our team to help with that. Can I get your name and number so they can reach you?"
 Remember: Your #1 job is capturing leads, #2 is answering questions.`;
 
-async function callGroq(userMessage, history = [], customPrompt = null) {
+// Per-client rate limiting (50 messages per hour)
+const clientRateLimits = new Map();
+const RATE_LIMIT_MAX = 50;
+const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
+
+function checkRateLimit(clientKey) {
+  const key = clientKey || 'default';
+  const now = Date.now();
+  if (!clientRateLimits.has(key)) {
+    clientRateLimits.set(key, { count: 1, windowStart: now });
+    return true;
+  }
+  const limit = clientRateLimits.get(key);
+  if (now - limit.windowStart > RATE_LIMIT_WINDOW) {
+    clientRateLimits.set(key, { count: 1, windowStart: now });
+    return true;
+  }
+  if (limit.count >= RATE_LIMIT_MAX) return false;
+  limit.count++;
+  return true;
+}
+
+const FALLBACK_MESSAGE = "I'm experiencing high demand right now! Please leave your name and phone number, and our team will get back to you within an hour.";
+
+async function callGroq(userMessage, history = [], customPrompt = null, retries = 2) {
   const systemPrompt = customPrompt || DEFAULT_SYSTEM_PROMPT;
   const payload = JSON.stringify({
     model: 'llama-3.3-70b-versatile',
@@ -99,8 +123,19 @@ async function callGroq(userMessage, history = [], customPrompt = null) {
     }, (res) => {
       let data = '';
       res.on('data', c => (data += c));
-      res.on('end', () => {
+      res.on('end', async () => {
         try {
+          // Handle rate limits with retry
+          if (res.statusCode === 429 && retries > 0) {
+            const waitMs = Math.pow(2, 3 - retries) * 1000; // 2s, 4s
+            console.warn(`⚠️ Groq rate limited, retrying in ${waitMs}ms (${retries} retries left)`);
+            await new Promise(r => setTimeout(r, waitMs));
+            return resolve(await callGroq(userMessage, history, customPrompt, retries - 1));
+          }
+          if (res.statusCode === 429) {
+            console.error('❌ Groq rate limit exhausted, using fallback');
+            return resolve(FALLBACK_MESSAGE);
+          }
           const j = JSON.parse(data);
           if (j.choices && j.choices[0]) {
             resolve(j.choices[0].message.content.trim());
@@ -110,7 +145,10 @@ async function callGroq(userMessage, history = [], customPrompt = null) {
         } catch (e) { reject(e); }
       });
     });
-    req.on('error', reject);
+    req.on('error', (err) => {
+      console.error('Groq network error:', err.message);
+      resolve(FALLBACK_MESSAGE); // Graceful fallback instead of crashing
+    });
     req.write(payload);
     req.end();
   });
@@ -169,8 +207,13 @@ const stats = { totalRequests: 0, avgLlmMs: 0, avgTtsMs: 0, cacheHits: 0 };
 app.post('/api/chat', async (req, res) => {
   const started = Date.now();
   try {
-    const { message, history = [], systemPrompt } = req.body;
+    const { message, history = [], systemPrompt, clientKey } = req.body;
     if (!message) return res.status(400).json({ error: 'No message' });
+
+    // Per-client rate limiting
+    if (!checkRateLimit(clientKey)) {
+      return res.json({ reply: FALLBACK_MESSAGE, rateLimited: true, latencyMs: Date.now() - started });
+    }
 
     stats.totalRequests++;
     
@@ -184,7 +227,7 @@ app.post('/api/chat', async (req, res) => {
     }
 
     if (!GROQ_API_KEY || GROQ_API_KEY.length < 10) {
-      return res.status(500).json({ error: 'Missing GROQ_API_KEY environment variable on Render!' });
+      return res.json({ reply: FALLBACK_MESSAGE, latencyMs: Date.now() - started });
     }
 
     const aiReply = await callGroq(message, history, systemPrompt || null);
@@ -197,7 +240,8 @@ app.post('/api/chat', async (req, res) => {
     res.json(resp);
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: 'Failed' });
+    // Graceful fallback instead of 500 error
+    res.json({ reply: FALLBACK_MESSAGE, latencyMs: Date.now() - started });
   }
 });
 
@@ -548,7 +592,7 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
     const email = session.customer_details.email;
     const name = session.customer_details.name || 'Valued Client';
     const amount = session.amount_total / 100;
-    const isPro = amount >= 90; // Pro plan is $99/mo
+    const isPro = amount >= 90;
 
     console.log(`💰 New Sale: ${email} | Plan: ${isPro ? 'Pro' : 'Starter'} ($${amount}) | Initiating Handoff...`);
     const dashboardKey = logCustomer({ email, name, amount, plan: isPro ? 'pro' : 'starter' });
@@ -560,18 +604,31 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
       console.error('Email failed but sale was logged:', e.message);
     }
   }
+
+  // Handle subscription cancellations
+  if (event.type === 'customer.subscription.deleted') {
+    const subscription = event.data.object;
+    const customerEmail = subscription.customer_email || '';
+    console.log(`🚫 Subscription cancelled: ${customerEmail}`);
+    
+    try {
+      const customers = JSON.parse(fs.readFileSync(customersFile));
+      const customer = customers.find(c => c.email === customerEmail);
+      if (customer) {
+        customer.active = false;
+        customer.cancelledAt = new Date().toISOString();
+        fs.writeFileSync(customersFile, JSON.stringify(customers, null, 2));
+        console.log(`❌ Client disabled: ${customerEmail} (key: ${customer.dashboardKey})`);
+      }
+    } catch (e) {
+      console.error('Cancellation handling error:', e.message);
+    }
+  }
+
   res.json({ received: true });
 });
 
-// ── Admin Leads Endpoint ───────────────────────────────────────
-app.get('/api/leads', (req, res) => {
-  try {
-    const customers = JSON.parse(fs.readFileSync(customersFile));
-    res.json(customers);
-  } catch (e) {
-    res.status(500).json({ error: "Could not load leads" });
-  }
-});
+// (duplicate /api/leads removed — per-client version defined above)
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', uptime: process.uptime(), stats });
@@ -615,16 +672,12 @@ app.post('/api/onboard', async (req, res) => {
     fs.writeFileSync(onboardingFile, JSON.stringify(submissions, null, 2));
     console.log(`📋 New intake form: ${data.businessName} (${data.industry})`);
 
-    // Determine which Stripe price to use
-    // Both plans are now monthly subscriptions
     const priceId = data.plan === 'pro'
       ? (process.env.STRIPE_PRICE_PRO || 'price_1TF9P5ItaqAtbYiGYIuZRQUV')
       : (process.env.STRIPE_PRICE_STARTER || 'price_1TF9NKItaqAtbYiGpOIXLjG2');
 
-    const mode = 'subscription';
-
     const session = await stripe.checkout.sessions.create({
-      mode,
+      mode: 'subscription',
       payment_method_types: ['card'],
       customer_email: data.email,
       line_items: [{ price: priceId, quantity: 1 }],
@@ -634,7 +687,12 @@ app.post('/api/onboard', async (req, res) => {
         businessName: data.businessName,
         industry: data.industry,
         website: data.website || '',
-        voice: data.voice || 'female-us'
+        hours: data.hours || '',
+        services: data.services || '',
+        pricing: data.pricing || '',
+        bookingLink: data.bookingLink || '',
+        faq: (data.faq || '').substring(0, 500), // Stripe metadata limit
+        greeting: (data.greeting || '').substring(0, 500)
       }
     });
 
@@ -642,6 +700,52 @@ app.post('/api/onboard', async (req, res) => {
   } catch (e) {
     console.error('Onboard error:', e.message);
     res.status(500).json({ error: e.message });
+  }
+});
+
+// ── Per-Client Config (widget fetches this at startup) ─────────
+app.get('/api/client-config', (req, res) => {
+  const key = req.query.key;
+  if (!key || key === 'default') {
+    return res.json({ greeting: 'Hi! How can I help you today?', systemPrompt: null });
+  }
+
+  try {
+    // Look up client's onboarding data
+    const submissions = JSON.parse(fs.readFileSync(onboardingFile));
+    const customers = JSON.parse(fs.readFileSync(customersFile));
+    
+    // Find the customer by key
+    const customer = customers.find(c => c.dashboardKey === key);
+    if (!customer) return res.json({ greeting: 'Hi! How can I help you today?', systemPrompt: null });
+
+    // Find their onboarding data by email
+    const onboard = submissions.find(s => s.email === customer.email);
+    if (!onboard) return res.json({ greeting: 'Hi! How can I help you today?', systemPrompt: null });
+
+    // Build custom system prompt from business data
+    let prompt = `You are the AI chatbot for ${onboard.businessName}, a ${onboard.industry} business.`;
+    if (onboard.hours) prompt += `\nBusiness hours: ${onboard.hours}`;
+    if (onboard.services) prompt += `\nServices offered: ${onboard.services}`;
+    if (onboard.pricing) prompt += `\nPricing: ${onboard.pricing}`;
+    if (onboard.faq) prompt += `\nFAQ:\n${onboard.faq}`;
+    if (onboard.bookingLink) prompt += `\nWhen someone wants to book, direct them to: ${onboard.bookingLink}`;
+    prompt += `\n\nYour goals:
+1. Answer questions about ${onboard.businessName} helpfully using the info above (1-2 sentences max)
+2. After answering 2-3 questions, naturally ask for their name and phone/email so the team can follow up
+3. If they want to book, ${onboard.bookingLink ? 'share the booking link: ' + onboard.bookingLink : 'collect their name, phone, and preferred date/time'}
+4. Be warm, professional, and concise. Never make up information.
+5. If asked something you don\'t know, say "Great question! Let me get someone from our team to help. Can I get your name and number?"
+Remember: #1 job = capture leads, #2 = answer questions about ${onboard.businessName}.`;
+
+    res.json({
+      greeting: onboard.greeting || `Hi! Welcome to ${onboard.businessName}. How can I help you today?`,
+      systemPrompt: prompt,
+      businessName: onboard.businessName
+    });
+  } catch (e) {
+    console.error('Client config error:', e.message);
+    res.json({ greeting: 'Hi! How can I help you today?', systemPrompt: null });
   }
 });
 
