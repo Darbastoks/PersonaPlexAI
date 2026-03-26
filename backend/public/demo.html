@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatVora — Try the AI Demo</title>
+  <meta name="description" content="Experience ChatVora's AI chatbot live. Pick your industry and chat with a pre-configured AI assistant.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0a; --surface: #111111; --surface-2: #1a1a1a; --border: #222222;
+      --text: #ffffff; --text-secondary: #888888; --text-muted: #555555;
+      --green: #00d47e; --green-dim: rgba(0,212,126,0.1); --green-border: rgba(0,212,126,0.25);
+      --radius: 12px; --radius-sm: 8px;
+    }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+    /* ── Nav ──────────── */
+    nav { padding: 16px 40px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+    .nav-logo { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text); }
+    .nav-logo .dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; box-shadow: 0 0 8px var(--green); }
+    .nav-right a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+
+    /* ── Layout ────────── */
+    .demo-layout { display: grid; grid-template-columns: 320px 1fr; min-height: calc(100vh - 57px); }
+    
+    /* ── Sidebar ────────── */
+    .sidebar { border-right: 1px solid var(--border); padding: 32px 24px; }
+    .sidebar h2 { font-size: 1rem; font-weight: 600; margin-bottom: 6px; }
+    .sidebar .desc { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.5; }
+    .industry-list { display: flex; flex-direction: column; gap: 8px; }
+    .industry-btn { padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; text-align: left; transition: all 0.2s; display: flex; align-items: center; gap: 10px; font-family: 'Inter', sans-serif; color: var(--text); font-size: 0.85rem; font-weight: 500; }
+    .industry-btn:hover { border-color: #333; }
+    .industry-btn.active { border-color: var(--green); background: var(--green-dim); }
+    .industry-btn .icon { font-size: 1.1rem; }
+    .sidebar-cta { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .sidebar-cta p { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px; }
+    .btn-green { display: block; width: 100%; text-align: center; padding: 12px; background: var(--green); color: #000; font-weight: 600; font-size: 0.85rem; border-radius: var(--radius-sm); text-decoration: none; transition: all 0.2s; }
+    .btn-green:hover { opacity: 0.9; }
+
+    /* ── Chat Area ───────── */
+    .chat-area { display: flex; flex-direction: column; }
+    .chat-header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    .chat-header .avatar { width: 36px; height: 36px; background: var(--green-dim); border: 1px solid var(--green-border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+    .chat-header .info h3 { font-size: 0.9rem; font-weight: 600; }
+    .chat-header .info p { font-size: 0.75rem; color: var(--green); }
+    .chat-header .badge-online { display: inline-flex; align-items: center; gap: 4px; }
+    .chat-header .badge-online::before { content: ''; width: 6px; height: 6px; background: var(--green); border-radius: 50%; }
+
+    .messages { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+    .msg { max-width: 70%; padding: 12px 16px; border-radius: 16px; font-size: 0.9rem; line-height: 1.5; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .msg.bot { background: var(--surface); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 4px; }
+    .msg.user { background: var(--green); color: #000; align-self: flex-end; border-bottom-right-radius: 4px; font-weight: 500; }
+    .msg.typing { color: var(--text-muted); }
+    .msg.typing .dots span { animation: blink 1.4s infinite; }
+    .msg.typing .dots span:nth-child(2) { animation-delay: 0.2s; }
+    .msg.typing .dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+
+    .chat-input { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 12px; }
+    .chat-input input { flex: 1; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: 0.9rem; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; }
+    .chat-input input:focus { border-color: var(--green); }
+    .chat-input button { padding: 12px 24px; background: var(--green); color: #000; border: none; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.85rem; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
+    .chat-input button:hover { opacity: 0.9; }
+    .chat-input button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* ── Responsive ────── */
+    @media (max-width: 768px) {
+      .demo-layout { grid-template-columns: 1fr; }
+      .sidebar { border-right: none; border-bottom: 1px solid var(--border); padding: 20px; }
+      .industry-list { flex-direction: row; flex-wrap: wrap; }
+      .industry-btn { flex: 1; min-width: 120px; justify-content: center; }
+      .sidebar-cta { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/" class="nav-logo"><span class="dot"></span> ChatVora</a>
+    <div class="nav-right"><a href="/onboard.html">Get your own →</a></div>
+  </nav>
+
+  <div class="demo-layout">
+    <!-- Sidebar: Industry Picker -->
+    <div class="sidebar">
+      <h2>Try the AI live</h2>
+      <p class="desc">Pick an industry below and chat with a pre-configured AI assistant. This is exactly what your customers will experience.</p>
+      <div class="industry-list">
+        <button class="industry-btn active" onclick="switchIndustry(this, 'dental')"><span class="icon">🦷</span> Dental Office</button>
+        <button class="industry-btn" onclick="switchIndustry(this, 'salon')"><span class="icon">💇</span> Hair Salon</button>
+        <button class="industry-btn" onclick="switchIndustry(this, 'restaurant')"><span class="icon">🍽️</span> Restaurant</button>
+        <button class="industry-btn" onclick="switchIndustry(this, 'law')"><span class="icon">⚖️</span> Law Firm</button>
+        <button class="industry-btn" onclick="switchIndustry(this, 'realestate')"><span class="icon">🏠</span> Real Estate</button>
+        <button class="industry-btn" onclick="switchIndustry(this, 'fitness')"><span class="icon">💪</span> Fitness / Gym</button>
+      </div>
+      <div class="sidebar-cta">
+        <p>Like what you see? Get your own AI assistant.</p>
+        <a href="/onboard.html" class="btn-green">Get started — $49/mo</a>
+      </div>
+    </div>
+
+    <!-- Chat Area -->
+    <div class="chat-area">
+      <div class="chat-header">
+        <div class="avatar" id="chatAvatar">🦷</div>
+        <div class="info">
+          <h3 id="chatName">Bright Smile Dental</h3>
+          <p class="badge-online" id="chatStatus">Online</p>
+        </div>
+      </div>
+      <div class="messages" id="messages"></div>
+      <div class="chat-input">
+        <input type="text" id="chatInput" placeholder="Type a message..." autocomplete="off">
+        <button id="sendBtn" onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const industries = {
+      dental: {
+        name: 'Bright Smile Dental',
+        icon: '🦷',
+        greeting: "Hi! Welcome to Bright Smile Dental. I'm the AI assistant here to help you. I can answer questions about our services, schedule appointments, or help with insurance inquiries. How can I help you today?",
+        systemPrompt: "You are the AI receptionist for Bright Smile Dental, a modern dental practice. Services: cleanings ($120), fillings ($200-350), whitening ($400), root canal ($800-1200), crowns ($1000-1500). Hours: Mon-Fri 8AM-6PM, Sat 9AM-2PM. Address: 123 Main St. Accept most insurance. You are friendly, professional, and try to book appointments. Keep responses under 2 sentences."
+      },
+      salon: {
+        name: 'Luxe Hair Studio',
+        icon: '💇',
+        greeting: "Hey there! Welcome to Luxe Hair Studio. I'm your AI assistant — I can help you book an appointment, check our services & pricing, or answer any questions. What can I do for you?",
+        systemPrompt: "You are the AI receptionist for Luxe Hair Studio, a premium hair salon. Services: women's cut ($65), men's cut ($35), color ($120-250), highlights ($150-300), blowout ($45), keratin treatment ($300). Hours: Tue-Sat 9AM-7PM. Accept walk-ins when available. You are warm, trendy, and try to book appointments. Keep responses under 2 sentences."
+      },
+      restaurant: {
+        name: 'The Golden Fork',
+        icon: '🍽️',
+        greeting: "Welcome to The Golden Fork! I'm the AI assistant. I can help you make a reservation, view our menu, check hours, or answer any questions about our restaurant. How can I help?",
+        systemPrompt: "You are the AI assistant for The Golden Fork, an upscale casual restaurant. Cuisine: American-Italian fusion. Reservation for parties of any size. Hours: Mon-Thu 11AM-10PM, Fri-Sat 11AM-11PM, Sun 10AM-9PM (brunch on weekends). Average entree: $18-35. Private dining available for events. You are welcoming and try to book reservations. Keep responses under 2 sentences."
+      },
+      law: {
+        name: 'Sterling & Associates',
+        icon: '⚖️',
+        greeting: "Welcome to Sterling & Associates, Attorneys at Law. I'm the AI assistant. I can help schedule a consultation, answer questions about our practice areas, or connect you with the right attorney. How may I assist you?",
+        systemPrompt: "You are the AI receptionist for Sterling & Associates, a mid-size law firm. Practice areas: personal injury, family law, estate planning, business law, criminal defense. Free initial consultations for personal injury. Other consultations: $150/hour. Hours: Mon-Fri 8:30AM-5:30PM. You are professional, reassuring, and try to book consultations. Keep responses under 2 sentences."
+      },
+      realestate: {
+        name: 'Pinnacle Realty',
+        icon: '🏠',
+        greeting: "Hi! Thanks for reaching out to Pinnacle Realty. I'm the AI assistant. I can help you find properties, schedule viewings, get market info, or connect you with an agent. What are you looking for?",
+        systemPrompt: "You are the AI assistant for Pinnacle Realty, a residential real estate agency. Services: buying, selling, rentals, property management. Currently listing homes from $250K-$2M. Free market analysis for sellers. Top-rated agents with 10+ years experience. You are enthusiastic, knowledgeable about local market, and try to schedule property viewings or connect with an agent. Keep responses under 2 sentences."
+      },
+      fitness: {
+        name: 'Iron Peak Fitness',
+        icon: '💪',
+        greeting: "Hey! Welcome to Iron Peak Fitness! I'm the AI assistant. I can help with membership info, class schedules, personal training, or answer any questions about our gym. What would you like to know?",
+        systemPrompt: "You are the AI assistant for Iron Peak Fitness, a modern gym and fitness center. Memberships: Basic ($29/mo, gym access), Premium ($59/mo, classes + gym), Elite ($99/mo, everything + personal training). Classes: yoga, HIIT, spin, boxing, pilates. Hours: Mon-Fri 5AM-10PM, Sat-Sun 7AM-8PM. Free 7-day trial available. You are energetic, motivating, and try to sign up new members or book trials. Keep responses under 2 sentences."
+      }
+    };
+
+    let currentIndustry = 'dental';
+    let history = [];
+
+    function switchIndustry(el, industry) {
+      document.querySelectorAll('.industry-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      currentIndustry = industry;
+      history = [];
+      const config = industries[industry];
+      document.getElementById('chatAvatar').textContent = config.icon;
+      document.getElementById('chatName').textContent = config.name;
+      const msgs = document.getElementById('messages');
+      msgs.innerHTML = '';
+      addMessage(config.greeting, 'bot');
+    }
+
+    function addMessage(text, type) {
+      const msgs = document.getElementById('messages');
+      const div = document.createElement('div');
+      div.className = `msg ${type}`;
+      div.textContent = text;
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+      return div;
+    }
+
+    function showTyping() {
+      const msgs = document.getElementById('messages');
+      const div = document.createElement('div');
+      div.className = 'msg bot typing';
+      div.id = 'typingIndicator';
+      div.innerHTML = '<span class="dots"><span>●</span> <span>●</span> <span>●</span></span>';
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function removeTyping() {
+      const el = document.getElementById('typingIndicator');
+      if (el) el.remove();
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('chatInput');
+      const btn = document.getElementById('sendBtn');
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      addMessage(msg, 'user');
+      history.push({ role: 'user', content: msg });
+      input.value = '';
+      btn.disabled = true;
+      showTyping();
+
+      try {
+        const config = industries[currentIndustry];
+        const resp = await fetch('/api/demo-chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: msg,
+            systemPrompt: config.systemPrompt,
+            history: history.slice(-6) // Keep last 3 exchanges for context
+          })
+        });
+        const data = await resp.json();
+        removeTyping();
+        if (data.reply) {
+          addMessage(data.reply, 'bot');
+          history.push({ role: 'assistant', content: data.reply });
+        } else {
+          addMessage("Sorry, I'm having a moment. Please try again!", 'bot');
+        }
+      } catch (e) {
+        removeTyping();
+        addMessage("Connection issue — please try again.", 'bot');
+      }
+      btn.disabled = false;
+      input.focus();
+    }
+
+    // Enter key to send
+    document.getElementById('chatInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    // Init with dental greeting
+    addMessage(industries.dental.greeting, 'bot');
+  </script>
+</body>
+</html>

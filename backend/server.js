@@ -183,6 +183,58 @@ app.post('/api/chat', async (req, res) => {
     res.status(500).json({ error: 'Failed' });
   }
 });
+// ── Demo Chat (Custom System Prompt for Demo Page) ──────────────
+app.post('/api/demo-chat', async (req, res) => {
+  try {
+    const { message, systemPrompt, history = [] } = req.body;
+    if (!message) return res.status(400).json({ error: 'No message' });
+    if (!GROQ_API_KEY || GROQ_API_KEY.length < 10) {
+      return res.status(500).json({ error: 'AI not configured' });
+    }
+
+    const payload = JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        { role: 'system', content: systemPrompt || 'You are a helpful AI assistant. Be friendly and concise.' },
+        ...history,
+        { role: 'user', content: message }
+      ],
+      temperature: 0.7,
+      max_tokens: 150
+    });
+
+    const reply = await new Promise((resolve, reject) => {
+      const apiReq = https.request({
+        hostname: 'api.groq.com',
+        path: '/openai/v1/chat/completions',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${GROQ_API_KEY}`,
+          'Content-Length': Buffer.byteLength(payload)
+        }
+      }, (apiRes) => {
+        let data = '';
+        apiRes.on('data', c => (data += c));
+        apiRes.on('end', () => {
+          try {
+            const j = JSON.parse(data);
+            if (j.choices && j.choices[0]) resolve(j.choices[0].message.content.trim());
+            else reject(new Error('Invalid response'));
+          } catch (e) { reject(e); }
+        });
+      });
+      apiReq.on('error', reject);
+      apiReq.write(payload);
+      apiReq.end();
+    });
+
+    res.json({ reply });
+  } catch (e) {
+    console.error('Demo chat error:', e);
+    res.status(500).json({ error: 'AI error' });
+  }
+});
 
 // ── Email Configuration ─────────────────────────────────────────
 const transporter = nodemailer.createTransport({
@@ -314,11 +366,12 @@ app.post('/api/onboard', async (req, res) => {
     console.log(`📋 New intake form: ${data.businessName} (${data.industry})`);
 
     // Determine which Stripe price to use
-    const priceId = data.plan === 'subscription'
-      ? (process.env.STRIPE_PRICE_SUBSCRIPTION || 'price_1TEUE8IdIzCuyveZcgpGi4G3')
-      : (process.env.STRIPE_PRICE_SETUP || 'price_1TEUE7IdIzCuyveZOmhxAYa5');
+    // Both plans are now monthly subscriptions
+    const priceId = data.plan === 'pro'
+      ? (process.env.STRIPE_PRICE_PRO || 'price_1TF9P5ItaqAtbYiGYIuZRQUV')
+      : (process.env.STRIPE_PRICE_STARTER || 'price_1TF9NKItaqAtbYiGpOIXLjG2');
 
-    const mode = data.plan === 'subscription' ? 'subscription' : 'payment';
+    const mode = 'subscription';
 
     const session = await stripe.checkout.sessions.create({
       mode,
