@@ -5,240 +5,413 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ChatVora — AI Chatbot for Local Businesses</title>
   <meta name="description" content="Add an AI chatbot to your website in minutes. Text and voice — answers customer questions, captures leads, 24/7.">
+  
+  <!-- Modern Tech Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+  
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0a0a0a; --surface: #111111; --surface-2: #1a1a1a; --border: #222222;
-      --text: #ffffff; --text-secondary: #888888; --text-muted: #555555;
-      --green: #00d47e; --green-dim: rgba(0,212,126,0.1); --green-border: rgba(0,212,126,0.25);
-      --radius: 16px; --radius-sm: 8px;
+      --bg: #030305;
+      --bg-gradient: radial-gradient(circle at top right, #001f14, #030305 60%);
+      --surface: rgba(255, 255, 255, 0.02);
+      --surface-hover: rgba(255, 255, 255, 0.05);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(0, 255, 136, 0.3);
+      --text: #ffffff;
+      --text-muted: #94a3b8;
+      --accent: #00ff88;
+      --accent-deep: #008f4c;
     }
-    body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
 
-    /* ── Nav ──────────── */
-    nav { position: sticky; top: 0; z-index: 100; padding: 14px 40px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: rgba(10,10,10,0.8); backdrop-filter: blur(20px); }
-    .nav-logo { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px; }
-    .nav-logo .dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; box-shadow: 0 0 8px var(--green); }
-    .nav-links { display: flex; align-items: center; gap: 28px; }
-    .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: color 0.2s; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      background-image: var(--bg-gradient);
+      color: var(--text);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Background Mesh & Orbs ── */
+    .bg-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      z-index: -1;
+      opacity: 0.15;
+      animation: floatOrb 20s infinite alternate;
+    }
+    .orb-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--accent); }
+    .orb-2 { bottom: -20%; right: -10%; width: 60vw; height: 60vw; background: #0066ff; animation-delay: -10s; }
+
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(10%, 15%) scale(1.1); }
+    }
+
+    /* ── Global Styles & Glassmorphism ── */
+    .glass {
+      background: var(--surface);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+    }
+
+    h1, h2, h3, h4, .logo-text { font-family: 'Outfit', sans-serif; }
+    
+    .text-gradient {
+      background: linear-gradient(135deg, #ffffff 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+    }
+
+    /* ── Navigation ── */
+    nav {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      max-width: 1200px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 32px;
+      z-index: 100;
+      border-radius: 999px;
+    }
+    .logo-text { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; }
+    .logo-dot { width: 10px; height: 10px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 16px var(--accent); animation: pulse 2s infinite; }
+    
+    .nav-links { display: flex; gap: 32px; align-items: center; }
+    .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.3s; }
     .nav-links a:hover { color: var(--text); }
-    .nav-cta { background: var(--green) !important; color: #000 !important; padding: 8px 18px; border-radius: 8px; font-weight: 600 !important; }
+    .btn-nav { background: rgba(0, 255, 136, 0.1); color: var(--accent) !important; border: 1px solid var(--border-glow); padding: 10px 24px; border-radius: 999px; font-weight: 600 !important; transition: all 0.3s ease !important; }
+    .btn-nav:hover { background: var(--accent); color: #000 !important; box-shadow: 0 0 20px rgba(0, 255, 136, 0.4); }
 
-    /* ── Hero ─────────── */
-    .hero { text-align: center; padding: 100px 20px 60px; max-width: 720px; margin: 0 auto; }
-    .hero-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--green-dim); border: 1px solid var(--green-border); padding: 6px 16px; border-radius: 999px; font-size: 0.8rem; color: var(--green); font-weight: 500; margin-bottom: 24px; }
-    .hero-badge .pulse { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-    .hero h1 { font-size: 3.2rem; font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 16px; }
-    .accent { color: var(--green); }
-    .hero p { color: var(--text-secondary); font-size: 1.1rem; line-height: 1.6; margin-bottom: 32px; }
-    .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-    .btn-primary { background: var(--green); color: #000; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 0.95rem; transition: all 0.2s; }
-    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-    .btn-secondary { background: transparent; color: var(--text); padding: 14px 28px; border: 1px solid var(--border); border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: all 0.2s; }
-    .btn-secondary:hover { border-color: var(--text-secondary); }
+    /* ── Hero Section (100vh) ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 120px 20px 60px;
+      position: relative;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      padding: 8px 20px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.8s forwards 0.2s;
+    }
+    .pill span { color: var(--accent); font-weight: 600; }
+    
+    .hero h1 {
+      font-size: clamp(3rem, 7vw, 5.5rem);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -2px;
+      max-width: 900px;
+      margin-bottom: 24px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.8s forwards 0.4s;
+    }
+    .hero p {
+      font-size: clamp(1.1rem, 2vw, 1.25rem);
+      color: var(--text-muted);
+      max-width: 600px;
+      line-height: 1.6;
+      margin-bottom: 48px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.8s forwards 0.6s;
+    }
+    
+    .hero-actions {
+      display: flex;
+      gap: 20px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.8s forwards 0.8s;
+    }
+    .btn-primary {
+      background: var(--text);
+      color: #000;
+      padding: 18px 40px;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(255,255,255,0.2);
+    }
+    .btn-secondary {
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 18px 40px;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s;
+    }
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.2);
+    }
 
-    /* ── Stats ────────── */
-    .stats { display: flex; justify-content: center; gap: 60px; padding: 40px 20px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: 0 40px; }
-    .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 20px; text-align: center; }
-    .stat-item { text-align: center; }
-    .stat-item .num { font-size: 2rem; font-weight: 800; color: var(--green); }
-    .stat-item .label { font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; }
+    /* ── Features Grid ── */
+    .section { padding: 120px 20px; max-width: 1200px; margin: 0 auto; }
+    .section-header { text-align: center; margin-bottom: 64px; }
+    .section-header h2 { font-size: 3rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 16px; }
+    .section-header p { color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
 
-    /* ── Features ─────── */
-    .features { padding: 80px 40px; max-width: 1000px; margin: 0 auto; }
-    .section-label { font-size: 0.75rem; color: var(--green); text-transform: uppercase; letter-spacing: 2px; font-weight: 600; text-align: center; margin-bottom: 8px; }
-    .section-title { font-size: 2rem; font-weight: 700; text-align: center; margin-bottom: 48px; letter-spacing: -0.5px; }
-    .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    .feature-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; transition: border-color 0.2s; }
-    .feature-card:hover { border-color: var(--green-border); }
-    .feature-icon { font-size: 1.5rem; margin-bottom: 12px; }
-    .feature-card h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; }
-    .feature-card p { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+    .feature-card {
+      padding: 40px;
+      transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.4s;
+    }
+    .feature-card:hover {
+      transform: translateY(-8px);
+      border-color: var(--border-glow);
+      box-shadow: 0 20px 40px rgba(0, 255, 136, 0.05);
+    }
+    .icon-box {
+      width: 60px;
+      height: 60px;
+      border-radius: 16px;
+      background: rgba(0, 255, 136, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      margin-bottom: 24px;
+      border: 1px solid var(--border-glow);
+    }
+    .feature-card h3 { font-size: 1.4rem; font-weight: 700; margin-bottom: 12px; }
+    .feature-card p { color: var(--text-muted); font-size: 1rem; line-height: 1.6; }
 
-    /* ── How It Works ──── */
-    .how-it-works { padding: 80px 40px; max-width: 800px; margin: 0 auto; }
-    .steps { display: flex; flex-direction: column; gap: 24px; }
-    .step { display: flex; align-items: flex-start; gap: 20px; }
-    .step-num { width: 36px; height: 36px; background: var(--green-dim); border: 1px solid var(--green-border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: var(--green); flex-shrink: 0; }
-    .step h3 { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
-    .step p { font-size: 0.85rem; color: var(--text-secondary); }
+    /* ── Pricing ── */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 32px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .pricing-card {
+      padding: 48px;
+      position: relative;
+      overflow: hidden;
+    }
+    .pricing-card.pro {
+      border-color: var(--accent);
+      box-shadow: 0 0 60px rgba(0, 255, 136, 0.1);
+    }
+    .pricing-card.pro::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 4px;
+      background: var(--accent);
+    }
+    .price-name { font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); margin-bottom: 16px; }
+    .price { font-size: 4rem; font-weight: 900; font-family: 'Outfit', sans-serif; letter-spacing: -2px; margin-bottom: 8px; }
+    .price span { font-size: 1.2rem; color: var(--text-muted); font-weight: 500; letter-spacing: 0; }
+    .pricing-desc { color: var(--text-muted); margin-bottom: 32px; font-size: 0.95rem; }
+    
+    .features-list { list-style: none; margin-bottom: 40px; }
+    .features-list li { padding: 12px 0; border-bottom: 1px solid var(--border); color: var(--text-muted); display: flex; align-items: center; gap: 12px; font-size: 0.95rem; }
+    .features-list li:last-child { border-bottom: none; }
+    .features-list li i { color: var(--accent); font-style: normal; font-weight: bold; }
 
-    /* ── Pricing ────────── */
-    .pricing { padding: 80px 40px; max-width: 900px; margin: 0 auto; }
-    .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-    .pricing-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; position: relative; }
-    .pricing-card.featured { border-color: var(--green-border); }
-    .pricing-card.featured::before { content: 'MOST POPULAR'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--green); color: #000; padding: 4px 16px; border-radius: 999px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px; }
-    .plan-name { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-secondary); font-weight: 600; margin-bottom: 8px; }
-    .price { font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; }
-    .price span { font-size: 1rem; font-weight: 400; color: var(--text-muted); }
-    .features-list { list-style: none; margin: 24px 0; display: flex; flex-direction: column; gap: 10px; }
-    .features-list li { font-size: 0.85rem; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; }
-    .check { color: var(--green); font-weight: 700; }
-    .plan-btn { display: block; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; }
-    .btn-outline { color: var(--text); border: 1px solid var(--border); }
-    .btn-outline:hover { border-color: var(--text-secondary); }
-    .btn-green { background: var(--green); color: #000; }
-    .btn-green:hover { opacity: 0.9; }
+    .btn-block { display: block; width: 100%; text-align: center; padding: 16px; border-radius: 12px; font-weight: 700; font-size: 1.05rem; text-decoration: none; transition: all 0.3s; }
+    .btn-outline { border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { background: rgba(255,255,255,0.05); }
+    .btn-accent { background: var(--accent); color: #000; }
+    .btn-accent:hover { opacity: 0.9; box-shadow: 0 0 30px rgba(0,255,136,0.3); }
 
-    /* ── CTA ──────────── */
-    .cta-section { padding: 80px 40px; }
-    .cta-box { max-width: 600px; margin: 0 auto; text-align: center; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 48px; }
-    .cta-box h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; }
-    .cta-box p { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 24px; }
+    /* ── Footer ── */
+    footer { text-align: center; padding: 60px 20px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.9rem; margin-top: 60px; }
 
-    /* ── Footer ─────────── */
-    footer { text-align: center; padding: 32px 20px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.8rem; }
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 16px var(--accent); }
+      50% { opacity: 0.4; box-shadow: 0 0 4px var(--accent); }
+    }
 
+    /* Scroll Animation Utility */
+    .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
+    .reveal.active { opacity: 1; transform: translateY(0); }
+
+    /* Responsive */
     @media (max-width: 768px) {
-      .hero h1 { font-size: 2rem; }
-      .feature-grid { grid-template-columns: 1fr; }
-      .pricing-grid { grid-template-columns: 1fr; }
-      .stats { flex-direction: column; gap: 20px; margin: 0 20px; }
-      nav { padding: 14px 20px; }
-      .features, .how-it-works, .pricing, .cta-section { padding: 40px 20px; }
+      nav { padding: 16px 20px; width: 95%; top: 10px; }
+      .nav-links { display: none; } /* Hide links on native mobile for cleaner look */
+      .hero { padding: 160px 20px 80px; }
+      .hero-actions { flex-direction: column; width: 100%; }
+      .hero-actions a { width: 100%; }
     }
   </style>
 </head>
 <body>
 
-  <nav>
-    <div class="nav-logo"><span class="dot"></span> ChatVora</div>
+  <!-- Background Ambient Orbs -->
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+
+  <!-- Navigation -->
+  <nav class="glass">
+    <div class="logo-text"><span class="logo-dot"></span> ChatVora</div>
     <div class="nav-links">
       <a href="#features">Features</a>
       <a href="/demo.html">Demo</a>
       <a href="#pricing">Pricing</a>
-      <a href="/onboard.html" class="nav-cta">Get Started</a>
+      <a href="/onboard.html" class="btn-nav">Get Started</a>
     </div>
   </nav>
 
-  <!-- Hero -->
-  <section class="hero">
-    <div class="hero-badge"><span class="pulse"></span> Now accepting new clients</div>
-    <h1>An AI chatbot for your website that <span class="accent">actually works</span></h1>
-    <p>ChatVora adds an intelligent AI chatbot to any business website. It answers customer questions, captures leads, and speaks with a real voice — 24/7, no coding needed.</p>
+  <!-- Hero Section -->
+  <header class="hero">
+    <div class="pill">Status: <span>Live & Accepting Clients</span></div>
+    <h1>The AI Chatbot That Actually <span class="text-gradient">Generates Revenue</span></h1>
+    <p>Install a fully autonomous, hyper-intelligent agent on your website. It answers questions instantly, captures qualified leads, and works 24/7 without taking a break.</p>
     <div class="hero-actions">
-      <a href="/demo.html" class="btn-primary">Try the live demo →</a>
-      <a href="#pricing" class="btn-secondary">See pricing</a>
+      <a href="/demo.html" class="btn-primary">Try the Live Demo</a>
+      <a href="#pricing" class="btn-secondary">View Pricing</a>
     </div>
-  </section>
+  </header>
 
-  <!-- Stats -->
-  <div class="stats">
-    <div class="stat-label">What you get</div>
-  </div>
-  <div class="stats">
-    <div class="stat-item"><div class="num">Text + Voice</div><div class="label">AI chatbot</div></div>
-    <div class="stat-item"><div class="num">24/7</div><div class="label">Always on</div></div>
-    <div class="stat-item"><div class="num">1 line</div><div class="label">To install</div></div>
-  </div>
-
-  <!-- Features -->
-  <section class="features" id="features">
-    <div class="section-label">Features</div>
-    <h2 class="section-title">Everything your website needs</h2>
-    <div class="feature-grid">
-      <div class="feature-card">
-        <div class="feature-icon">💬</div>
-        <h3>AI Text Chat</h3>
-        <p>Visitors type questions and get instant, intelligent answers about your business — services, hours, pricing, anything.</p>
+  <!-- Features Section -->
+  <section id="features" class="section">
+    <div class="section-header reveal">
+      <h2>Everything you need. <span class="text-gradient">Zero-touch.</span></h2>
+      <p>A completely automated customer service and lead capture machine designed specifically for local businesses.</p>
+    </div>
+    <div class="grid-3">
+      <div class="feature-card glass reveal">
+        <div class="icon-box">💬</div>
+        <h3>Intelligent Text AI</h3>
+        <p>No more dumb bots. Our AI reads your business info and answers complex customer questions accurately in real-time.</p>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">🎙️</div>
-        <h3>AI Voice Chat</h3>
-        <p>Pro plan includes voice — visitors click the mic and talk to your AI. It responds with a natural human voice.</p>
+      <div class="feature-card glass reveal" style="transition-delay: 0.1s;">
+        <div class="icon-box">🎙️</div>
+        <h3>Two-Way Voice Chat</h3>
+        <p>Users can tap the microphone to speak naturally. The AI understands nuance and replies instantly with a human-like voice.</p>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">📋</div>
-        <h3>Lead Capture</h3>
-        <p>The chatbot collects visitor names, emails, and phone numbers so you never miss a potential customer.</p>
+      <div class="feature-card glass reveal" style="transition-delay: 0.2s;">
+        <div class="icon-box">🎯</div>
+        <h3>Smart Lead Capture</h3>
+        <p>When a customer is ready to book, the bot naturally asks for their name and contact info, dropping the lead directly in your lap.</p>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">🎨</div>
-        <h3>Custom Branding</h3>
-        <p>Your business name, greeting message, and personality — the AI sounds like it was built just for you.</p>
+      <div class="feature-card glass reveal">
+        <div class="icon-box">🧠</div>
+        <h3>Custom Trained</h3>
+        <p>We train the agent exclusively on your pricing, services, and FAQ. It acts as an extension of your own staff.</p>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">⚡</div>
-        <h3>Instant Install</h3>
-        <p>Paste one line of code into your website. The chat widget appears immediately — no developers needed.</p>
+      <div class="feature-card glass reveal" style="transition-delay: 0.1s;">
+        <div class="icon-box">⚡</div>
+        <h3>Instant Setup</h3>
+        <p>Just copy and paste a single line of code into your website's header. You're live in under 5 minutes with no developers required.</p>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">🕐</div>
-        <h3>24/7 Availability</h3>
-        <p>Your AI chatbot never goes offline. Customers get answers at 3AM on a Sunday just like 10AM on a Monday.</p>
+      <div class="feature-card glass reveal" style="transition-delay: 0.2s;">
+        <div class="icon-box">📊</div>
+        <h3>Lead Dashboard</h3>
+        <p>Log into your private portal at any time to review conversation transcripts, lead details, and engagement analytics.</p>
       </div>
     </div>
   </section>
 
-  <!-- How It Works -->
-  <section class="how-it-works">
-    <div class="section-label">How It Works</div>
-    <h2 class="section-title">Live in under 5 minutes</h2>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">1</div>
-        <div><h3>Tell us about your business</h3><p>Fill out a quick form with your business name, industry, services, and what you want the AI to say.</p></div>
-      </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <div><h3>We configure your AI</h3><p>Your custom chatbot is built automatically with your business info, personality, and branding.</p></div>
-      </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <div><h3>Paste one line of code</h3><p>Add a single script tag to your website. The AI chatbot appears instantly and starts helping customers.</p></div>
-      </div>
+  <!-- Pricing Section -->
+  <section id="pricing" class="section">
+    <div class="section-header reveal">
+      <h2>Simple, transparent pricing.</h2>
+      <p>No hidden fees. Cancel anytime. Stop losing midnight customers.</p>
     </div>
-  </section>
-
-  <!-- Pricing -->
-  <section class="pricing" id="pricing">
-    <div class="section-label">Pricing</div>
-    <h2 class="section-title">Simple, transparent pricing</h2>
     <div class="pricing-grid">
-      <div class="pricing-card">
-        <div class="plan-name">Starter</div>
-        <div class="price">$49<span>/mo</span></div>
+      <!-- Starter -->
+      <div class="pricing-card glass reveal">
+        <div class="price-name">Automated Lead Gen</div>
+        <div class="price">$149<span>/mo</span></div>
+        <div class="pricing-desc">Perfect for local businesses wanting 24/7 coverage.</div>
         <ul class="features-list">
-          <li><span class="check">✓</span> AI text chatbot for your website</li>
-          <li><span class="check">✓</span> 500 conversations/mo</li>
-          <li><span class="check">✓</span> Custom greeting & branding</li>
-          <li><span class="check">✓</span> One-line embed install</li>
-          <li><span class="check">✓</span> 24/7 uptime</li>
+          <li><i>✓</i> Advanced AI Text Chatbot</li>
+          <li><i>✓</i> Automatic Lead Capture</li>
+          <li><i>✓</i> Custom Business Training</li>
+          <li><i>✓</i> Private Lead Dashboard</li>
+          <li><i>✓</i> Instant Email Notifications</li>
         </ul>
-        <a href="/onboard.html?plan=starter" class="plan-btn btn-outline">Get started</a>
+        <a href="/onboard.html" class="btn-block btn-outline">Start capturing leads</a>
       </div>
-      <div class="pricing-card featured">
-        <div class="plan-name">Pro</div>
-        <div class="price">$99<span>/mo</span></div>
+      
+      <!-- Pro -->
+      <div class="pricing-card glass pro reveal" style="transition-delay: 0.1s;">
+        <div class="price-name">Voice AI + Concierge</div>
+        <div class="price">$399<span>/mo</span></div>
+        <div class="pricing-desc">The ultimate hands-off customer experience.</div>
         <ul class="features-list">
-          <li><span class="check">✓</span> Everything in Starter</li>
-          <li><span class="check">✓</span> Unlimited conversations</li>
-          <li><span class="check">✓</span> AI voice chat (talk & listen)</li>
-          <li><span class="check">✓</span> Lead capture (name, email, phone)</li>
-          <li><span class="check">✓</span> Leads dashboard with CSV export</li>
-          <li><span class="check">✓</span> Email alerts for every new lead</li>
+          <li><i>✓</i> <strong>Everything in Lead Gen</strong></li>
+          <li><i>✓</i> Ultra-Low Latency Voice Chat</li>
+          <li><i>✓</i> Human-like Speech Synthesis</li>
+          <li><i>✓</i> Direct Calendar Routing</li>
+          <li><i>✓</i> Priority System Resources</li>
         </ul>
-        <a href="/onboard.html?plan=pro" class="plan-btn btn-green">Get started →</a>
+        <a href="/onboard.html" class="btn-block btn-accent">Upgrade to Premium Voice</a>
       </div>
     </div>
   </section>
 
-  <!-- CTA -->
-  <section class="cta-section">
-    <div class="cta-box">
-      <h2>See it in action right now</h2>
-      <p>Try a live demo — text or voice. Pick your industry and chat with the AI. No signup needed.</p>
-      <a href="/demo.html" class="btn-primary">Try the live demo →</a>
-    </div>
-  </section>
-
+  <!-- Footer -->
   <footer>
-    <p>© 2026 ChatVora. AI chatbots for local businesses.</p>
+    <div class="logo-text" style="justify-content: center; margin-bottom: 12px;">
+      <span class="logo-dot" style="animation:none;"></span> ChatVora AI
+    </div>
+    <p>&copy; 2026 ChatVora. All rights reserved. Providing autonomous agency services.</p>
   </footer>
+
+  <!-- Scroll Reveal Script -->
+  <script>
+    const reveals = document.querySelectorAll('.reveal');
+    const callback = (entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+          observer.unobserve(entry.target);
+        }
+      });
+    };
+    const observer = new IntersectionObserver(callback, { root: null, margin: '0px', threshold: 0.15 });
+    reveals.forEach(el => observer.observe(el));
+  </script>
 
 </body>
 </html>
