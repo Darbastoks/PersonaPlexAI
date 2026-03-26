@@ -189,16 +189,21 @@ app.post('/api/demo-chat', async (req, res) => {
     const { message, systemPrompt, history = [] } = req.body;
     if (!message) return res.status(400).json({ error: 'No message' });
     if (!GROQ_API_KEY || GROQ_API_KEY.length < 10) {
+      console.error('Demo chat: GROQ_API_KEY missing or too short');
       return res.status(500).json({ error: 'AI not configured' });
     }
 
+    // Call Groq directly using the existing callGroq-style approach
+    const sysMsg = systemPrompt || 'You are a helpful AI assistant. Be friendly and concise.';
+    const allMessages = [
+      { role: 'system', content: sysMsg },
+      ...history.slice(-6),
+      { role: 'user', content: message }
+    ];
+
     const payload = JSON.stringify({
       model: 'llama-3.3-70b-versatile',
-      messages: [
-        { role: 'system', content: systemPrompt || 'You are a helpful AI assistant. Be friendly and concise.' },
-        ...history,
-        { role: 'user', content: message }
-      ],
+      messages: allMessages,
       temperature: 0.7,
       max_tokens: 150
     });
@@ -219,20 +224,30 @@ app.post('/api/demo-chat', async (req, res) => {
         apiRes.on('end', () => {
           try {
             const j = JSON.parse(data);
-            if (j.choices && j.choices[0]) resolve(j.choices[0].message.content.trim());
-            else reject(new Error('Invalid response'));
-          } catch (e) { reject(e); }
+            if (j.choices && j.choices[0]) {
+              resolve(j.choices[0].message.content.trim());
+            } else {
+              console.error('Demo chat Groq unexpected response:', JSON.stringify(j).substring(0, 500));
+              reject(new Error('Groq returned no choices: ' + (j.error?.message || 'unknown')));
+            }
+          } catch (e) {
+            console.error('Demo chat Groq parse error:', data.substring(0, 500));
+            reject(e);
+          }
         });
       });
-      apiReq.on('error', reject);
+      apiReq.on('error', (err) => {
+        console.error('Demo chat network error:', err.message);
+        reject(err);
+      });
       apiReq.write(payload);
       apiReq.end();
     });
 
     res.json({ reply });
   } catch (e) {
-    console.error('Demo chat error:', e);
-    res.status(500).json({ error: 'AI error' });
+    console.error('Demo chat error:', e.message);
+    res.status(500).json({ error: e.message || 'AI error' });
   }
 });
 
