@@ -281,21 +281,81 @@ const sendWelcomeEmail = async (email, customerName) => {
     to: email,
     subject: `Welcome to ChatVora AI, ${customerName}! 🚀`,
     html: `
-      <div style="font-family: -apple-system, 'Segoe UI', sans-serif; padding: 32px; color: #ffffff; max-width: 560px; margin: 0 auto; background: #111111; border: 1px solid #222; border-radius: 12px;">
+      <div style="font-family: -apple-system, 'Segoe UI', sans-serif; padding: 32px; color: #ffffff; max-width: 600px; margin: 0 auto; background: #111111; border: 1px solid #222; border-radius: 12px;">
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 24px;">
           <div style="width: 8px; height: 8px; background: #00d47e; border-radius: 50%;"></div>
           <span style="font-weight: 700; font-size: 16px;">ChatVora</span>
         </div>
-        <h2 style="color: #00d47e; font-size: 22px; margin-bottom: 8px;">Your AI Assistant is Ready</h2>
+        <h2 style="color: #00d47e; font-size: 22px; margin-bottom: 8px;">Your AI Chatbot is Ready!</h2>
         <p style="color: #888;">Hi ${customerName},</p>
-        <p style="color: #888;">Thank you for choosing ChatVora. Your personalized AI Receptionist has been provisioned and is ready.</p>
+        <p style="color: #888;">Thank you for choosing ChatVora. Your AI chatbot has been set up and is ready to go live on your website.</p>
+
         <hr style="border: none; border-top: 1px solid #222; margin: 24px 0;">
-        <p style="color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 12px;">How to install</p>
-        <p style="color: #ccc;">Copy and paste this one line into your website's <b>&lt;head&gt;</b>:</p>
+
+        <p style="color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 12px;">Your embed code</p>
+        <p style="color: #ccc;">Copy this one line and paste it into your website:</p>
         <div style="background: #0a0a0a; padding: 16px; border-radius: 8px; border: 1px solid #222; font-family: monospace; font-size: 13px; color: #00d47e; overflow-x: auto; margin: 16px 0;">
           &lt;script src="https://${hostname}/widget.js"&gt;&lt;/script&gt;
         </div>
-        <p style="color: #888;">Once added, the AI chat bubble will appear instantly. Click it and say "Hello" to test.</p>
+
+        <hr style="border: none; border-top: 1px solid #222; margin: 24px 0;">
+
+        <p style="color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 16px;">Install guide for your platform</p>
+
+        <div style="background: #0a0a0a; padding: 16px; border-radius: 8px; border: 1px solid #222; margin-bottom: 12px;">
+          <p style="color: #00d47e; font-weight: 600; margin-bottom: 8px;">WordPress</p>
+          <p style="color: #aaa; font-size: 13px; line-height: 1.6; margin: 0;">
+            1. Install the free "WPCode" plugin (Plugins → Add New → search "WPCode")<br>
+            2. Go to Code Snippets → Add Snippet → select "Add Your Custom Code"<br>
+            3. Set code type to "HTML Snippet"<br>
+            4. Paste the embed code above<br>
+            5. Set location to "Site Wide Footer"<br>
+            6. Toggle it to Active and click Save
+          </p>
+        </div>
+
+        <div style="background: #0a0a0a; padding: 16px; border-radius: 8px; border: 1px solid #222; margin-bottom: 12px;">
+          <p style="color: #00d47e; font-weight: 600; margin-bottom: 8px;">Wix</p>
+          <p style="color: #aaa; font-size: 13px; line-height: 1.6; margin: 0;">
+            1. Go to your Wix Dashboard<br>
+            2. Click Settings → Custom Code<br>
+            3. Click "+ Add Code"<br>
+            4. Paste the embed code above<br>
+            5. Set it to load on "All pages" in the "Body - end" position<br>
+            6. Click Apply
+          </p>
+        </div>
+
+        <div style="background: #0a0a0a; padding: 16px; border-radius: 8px; border: 1px solid #222; margin-bottom: 12px;">
+          <p style="color: #00d47e; font-weight: 600; margin-bottom: 8px;">Squarespace</p>
+          <p style="color: #aaa; font-size: 13px; line-height: 1.6; margin: 0;">
+            1. Go to Settings → Advanced → Code Injection<br>
+            2. Paste the embed code in the "Footer" box<br>
+            3. Click Save
+          </p>
+        </div>
+
+        <div style="background: #0a0a0a; padding: 16px; border-radius: 8px; border: 1px solid #222; margin-bottom: 12px;">
+          <p style="color: #00d47e; font-weight: 600; margin-bottom: 8px;">Shopify</p>
+          <p style="color: #aaa; font-size: 13px; line-height: 1.6; margin: 0;">
+            1. Go to Online Store → Themes → Edit Code<br>
+            2. Open "theme.liquid"<br>
+            3. Paste the embed code just before &lt;/body&gt;<br>
+            4. Click Save
+          </p>
+        </div>
+
+        <div style="background: #0a0a0a; padding: 16px; border-radius: 8px; border: 1px solid #222; margin-bottom: 12px;">
+          <p style="color: #00d47e; font-weight: 600; margin-bottom: 8px;">Any other website</p>
+          <p style="color: #aaa; font-size: 13px; line-height: 1.6; margin: 0;">
+            Paste the embed code anywhere before the &lt;/body&gt; tag in your HTML. The chat widget will appear automatically in the bottom-right corner.
+          </p>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid #222; margin: 24px 0;">
+
+        <p style="color: #888; font-size: 13px;">Once installed, the chat bubble appears on your site instantly. Click it and say "Hello" to test!</p>
+        <p style="color: #888; font-size: 13px;">Need help installing? Reply to this email and we'll walk you through it.</p>
         <p style="color: #555; font-size: 12px; margin-top: 32px;">— The ChatVora Team</p>
       </div>
     `
