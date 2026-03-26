@@ -1,6 +1,9 @@
 (function() {
-  const SCRIPT_URL = new URL(document.currentScript.src);
+  const SCRIPT_TAG = document.currentScript;
+  const SCRIPT_URL = new URL(SCRIPT_TAG.src);
   const BASE_URL = SCRIPT_URL.origin;
+  const CLIENT_KEY = SCRIPT_TAG.getAttribute('data-key') || 'default';
+  const CLIENT_EMAIL = SCRIPT_TAG.getAttribute('data-email') || '';
 
   // 1. Inject CSS
   const link = document.createElement('link');
@@ -142,7 +145,7 @@
         await fetch(`${BASE_URL}/api/lead-capture`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, phone, source: 'chatbot-widget' })
+          body: JSON.stringify({ name, email, phone, source: 'chatbot-widget', clientKey: CLIENT_KEY, clientEmail: CLIENT_EMAIL })
         });
       } catch (e) {}
 

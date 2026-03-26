@@ -413,14 +413,38 @@ const customersFile = path.join(__dirname, 'customers.json');
 // Ensure customers file exists
 if (!fs.existsSync(customersFile)) fs.writeFileSync(customersFile, JSON.stringify([]));
 
-const logCustomer = (data) => {
-  const customers = JSON.parse(fs.readFileSync(customersFile));
-  customers.push({ ...data, date: new Date().toISOString() });
-  fs.writeFileSync(customersFile, JSON.stringify(customers, null, 2));
+// Generate a unique dashboard key for each client
+const generateDashboardKey = () => {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let key = 'cv_';
+  for (let i = 0; i < 12; i++) key += chars[Math.floor(Math.random() * chars.length)];
+  return key;
 };
 
-const sendWelcomeEmail = async (email, customerName) => {
+const logCustomer = (data) => {
+  const customers = JSON.parse(fs.readFileSync(customersFile));
+  const dashboardKey = generateDashboardKey();
+  customers.push({ ...data, dashboardKey, date: new Date().toISOString() });
+  fs.writeFileSync(customersFile, JSON.stringify(customers, null, 2));
+  return dashboardKey;
+};
+
+const sendWelcomeEmail = async (email, customerName, dashboardKey, isPro = false) => {
   const hostname = process.env.RENDER_EXTERNAL_HOSTNAME || 'chatvora.onrender.com';
+  const embedCode = isPro
+    ? `&lt;script src="https://${hostname}/widget.js" data-key="${dashboardKey}" data-email="${email}"&gt;&lt;/script&gt;`
+    : `&lt;script src="https://${hostname}/widget.js"&gt;&lt;/script&gt;`;
+  const dashboardSection = isPro ? `
+        <hr style="border: none; border-top: 1px solid #222; margin: 24px 0;">
+
+        <p style="color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 12px;">Your Leads Dashboard <span style="background: #00d47e; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700;">PRO</span></p>
+        <p style="color: #ccc;">View all captured leads, download CSV, and track performance:</p>
+        <div style="background: #0a0a0a; padding: 16px; border-radius: 8px; border: 1px solid #00d47e; margin: 16px 0;">
+          <a href="https://${hostname}/leads.html?key=${dashboardKey}" style="color: #00d47e; font-weight: 600; text-decoration: none; font-size: 14px;">→ Open your Leads Dashboard</a>
+        </div>
+        <p style="color: #888; font-size: 12px;">Your dashboard key: <code style="background: #1a1a1a; padding: 2px 6px; border-radius: 4px; color: #00d47e;">${dashboardKey}</code></p>
+        <p style="color: #888; font-size: 12px;">You'll also receive email alerts whenever a new lead is captured.</p>
+  ` : '';
   const mailOptions = {
     from: `"ChatVora AI" <${process.env.SENDER_EMAIL}>`,
     to: email,
@@ -440,8 +464,9 @@ const sendWelcomeEmail = async (email, customerName) => {
         <p style="color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 12px;">Your embed code</p>
         <p style="color: #ccc;">Copy this one line and paste it into your website:</p>
         <div style="background: #0a0a0a; padding: 16px; border-radius: 8px; border: 1px solid #222; font-family: monospace; font-size: 13px; color: #00d47e; overflow-x: auto; margin: 16px 0;">
-          &lt;script src="https://${hostname}/widget.js"&gt;&lt;/script&gt;
+          ${embedCode}
         </div>
+        ${dashboardSection}
 
         <hr style="border: none; border-top: 1px solid #222; margin: 24px 0;">
 
@@ -522,13 +547,15 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
     const session = event.data.object;
     const email = session.customer_details.email;
     const name = session.customer_details.name || 'Valued Client';
+    const amount = session.amount_total / 100;
+    const isPro = amount >= 90; // Pro plan is $99/mo
 
-    console.log(`💰 New Sale: ${email} | Initiating Handoff...`);
-    logCustomer({ email, name, amount: session.amount_total / 100 });
+    console.log(`💰 New Sale: ${email} | Plan: ${isPro ? 'Pro' : 'Starter'} ($${amount}) | Initiating Handoff...`);
+    const dashboardKey = logCustomer({ email, name, amount, plan: isPro ? 'pro' : 'starter' });
     
     try {
-      await sendWelcomeEmail(email, name);
-      console.log(`✅ Automated Handoff Delivered to ${email}`);
+      await sendWelcomeEmail(email, name, dashboardKey, isPro);
+      console.log(`✅ Automated Handoff Delivered to ${email} | Key: ${dashboardKey}`);
     } catch (e) {
       console.error('Email failed but sale was logged:', e.message);
     }
