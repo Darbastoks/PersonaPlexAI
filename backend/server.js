@@ -8,9 +8,87 @@ const path = require('path');
 const fs = require('fs');
 const https = require('https');
 const http = require('http');
+const { MongoClient } = require('mongodb');
 require('dotenv').config();
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_mock');
+
+// ── MongoDB Connection ──────────────────────────────────────────
+const MONGODB_URI = process.env.MONGODB_URI || '';
+let db = null;
+
+async function connectMongo() {
+  if (!MONGODB_URI) {
+    console.warn('⚠️ No MONGODB_URI — using JSON file fallback (data will be lost on redeploy!)');
+    return;
+  }
+  try {
+    const client = new MongoClient(MONGODB_URI);
+    await client.connect();
+    db = client.db('chatvora');
+    console.log('✅ MongoDB connected — data is persistent!');
+    // Create indexes
+    await db.collection('leads').createIndex({ clientKey: 1 });
+    await db.collection('customers').createIndex({ email: 1 });
+    await db.collection('customers').createIndex({ dashboardKey: 1 });
+  } catch (e) {
+    console.error('❌ MongoDB connection failed:', e.message);
+    console.warn('⚠️ Falling back to JSON files');
+  }
+}
+connectMongo();
+
+// DB helpers — use MongoDB if connected, otherwise JSON files
+async function dbInsert(collection, doc) {
+  if (db) {
+    await db.collection(collection).insertOne(doc);
+  } else {
+    const file = path.join(__dirname, `${collection}.json`);
+    if (!fs.existsSync(file)) fs.writeFileSync(file, '[]');
+    const data = JSON.parse(fs.readFileSync(file));
+    data.push(doc);
+    fs.writeFileSync(file, JSON.stringify(data, null, 2));
+  }
+}
+
+async function dbFind(collection, query = {}) {
+  if (db) {
+    return await db.collection(collection).find(query).toArray();
+  } else {
+    const file = path.join(__dirname, `${collection}.json`);
+    if (!fs.existsSync(file)) return [];
+    const data = JSON.parse(fs.readFileSync(file));
+    // Basic filter
+    if (Object.keys(query).length === 0) return data;
+    return data.filter(doc => {
+      return Object.entries(query).every(([k, v]) => doc[k] === v);
+    });
+  }
+}
+
+async function dbFindOne(collection, query) {
+  if (db) {
+    return await db.collection(collection).findOne(query);
+  } else {
+    const all = await dbFind(collection, query);
+    return all[0] || null;
+  }
+}
+
+async function dbUpdate(collection, query, update) {
+  if (db) {
+    await db.collection(collection).updateOne(query, { $set: update });
+  } else {
+    const file = path.join(__dirname, `${collection}.json`);
+    if (!fs.existsSync(file)) return;
+    const data = JSON.parse(fs.readFileSync(file));
+    const idx = data.findIndex(doc => Object.entries(query).every(([k, v]) => doc[k] === v));
+    if (idx >= 0) {
+      Object.assign(data[idx], update);
+      fs.writeFileSync(file, JSON.stringify(data, null, 2));
+    }
+  }
+}
 
 const execPromise = util.promisify(exec);
 const app = express();
@@ -55,11 +133,12 @@ class LRUCache {
 }
 const replyCache = new LRUCache(200);
 
-// ── Leads & Chat Logs Storage ──────────────────────────────────
+// ── Leads & Chat Logs (MongoDB-backed) ─────────────────────
+// JSON files kept as fallback only
 const leadsFile = path.join(__dirname, 'leads.json');
 const chatLogsFile = path.join(__dirname, 'chat-logs.json');
-if (!fs.existsSync(leadsFile)) fs.writeFileSync(leadsFile, JSON.stringify([]));
-if (!fs.existsSync(chatLogsFile)) fs.writeFileSync(chatLogsFile, JSON.stringify([]));
+if (!fs.existsSync(leadsFile)) fs.writeFileSync(leadsFile, '[]');
+if (!fs.existsSync(chatLogsFile)) fs.writeFileSync(chatLogsFile, '[]');
 
 // ── Groq LLM ──────────────────────────────────────────────────
 const GROQ_API_KEY = process.env.GROQ_API_KEY || '';
@@ -262,10 +341,8 @@ app.post('/api/lead-capture', async (req, res) => {
       timestamp: new Date().toISOString()
     };
 
-    // Save to file
-    const leads = JSON.parse(fs.readFileSync(leadsFile));
-    leads.push(lead);
-    fs.writeFileSync(leadsFile, JSON.stringify(leads, null, 2));
+    // Save to MongoDB (or JSON fallback)
+    await dbInsert('leads', lead);
     console.log(`📩 New lead captured: ${lead.name} (${lead.email || lead.phone}) for ${lead.businessName}`);
 
     const leadEmailHtml = `
@@ -327,7 +404,7 @@ app.post('/api/lead-capture', async (req, res) => {
 });
 
 // ── Chat Log ──────────────────────────────────────────────────
-app.post('/api/chat-log', (req, res) => {
+app.post('/api/chat-log', async (req, res) => {
   try {
     const { messages, businessName, sessionId } = req.body;
     const log = {
@@ -336,10 +413,7 @@ app.post('/api/chat-log', (req, res) => {
       messages: messages || [],
       timestamp: new Date().toISOString()
     };
-    const logs = JSON.parse(fs.readFileSync(chatLogsFile));
-    logs.push(log);
-    if (logs.length > 500) logs.splice(0, logs.length - 500);
-    fs.writeFileSync(chatLogsFile, JSON.stringify(logs, null, 2));
+    await dbInsert('chatLogs', log);
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ error: 'Failed' });
@@ -347,10 +421,9 @@ app.post('/api/chat-log', (req, res) => {
 });
 
 // ── Get Leads (filtered by client key for dashboard) ──────────
-app.get('/api/leads', (req, res) => {
+app.get('/api/leads', async (req, res) => {
   try {
     const key = req.query.key;
-    const leads = JSON.parse(fs.readFileSync(leadsFile));
     
     if (key) {
       // Filter leads for this specific client
@@ -465,11 +538,10 @@ const generateDashboardKey = () => {
   return key;
 };
 
-const logCustomer = (data) => {
-  const customers = JSON.parse(fs.readFileSync(customersFile));
+const logCustomer = async (data) => {
   const dashboardKey = generateDashboardKey();
-  customers.push({ ...data, dashboardKey, date: new Date().toISOString() });
-  fs.writeFileSync(customersFile, JSON.stringify(customers, null, 2));
+  const customerDoc = { ...data, dashboardKey, active: true, date: new Date().toISOString() };
+  await dbInsert('customers', customerDoc);
   return dashboardKey;
 };
 
@@ -612,14 +684,8 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
     console.log(`🚫 Subscription cancelled: ${customerEmail}`);
     
     try {
-      const customers = JSON.parse(fs.readFileSync(customersFile));
-      const customer = customers.find(c => c.email === customerEmail);
-      if (customer) {
-        customer.active = false;
-        customer.cancelledAt = new Date().toISOString();
-        fs.writeFileSync(customersFile, JSON.stringify(customers, null, 2));
-        console.log(`❌ Client disabled: ${customerEmail} (key: ${customer.dashboardKey})`);
-      }
+      await dbUpdate('customers', { email: customerEmail }, { active: false, cancelledAt: new Date().toISOString() });
+      console.log(`❌ Client disabled: ${customerEmail}`);
     } catch (e) {
       console.error('Cancellation handling error:', e.message);
     }
@@ -704,7 +770,7 @@ app.post('/api/onboard', async (req, res) => {
 });
 
 // ── Per-Client Config (widget fetches this at startup) ─────────
-app.get('/api/client-config', (req, res) => {
+app.get('/api/client-config', async (req, res) => {
   const key = req.query.key;
   if (!key || key === 'default') {
     return res.json({ greeting: 'Hi! How can I help you today?', systemPrompt: null });
@@ -713,13 +779,9 @@ app.get('/api/client-config', (req, res) => {
   try {
     // Look up client's onboarding data
     const submissions = JSON.parse(fs.readFileSync(onboardingFile));
-    const customers = JSON.parse(fs.readFileSync(customersFile));
-    
-    // Find the customer by key
-    const customer = customers.find(c => c.dashboardKey === key);
+    const customer = await dbFindOne('customers', { dashboardKey: key });
     if (!customer) return res.json({ greeting: 'Hi! How can I help you today?', systemPrompt: null });
 
-    // Find their onboarding data by email
     const onboard = submissions.find(s => s.email === customer.email);
     if (!onboard) return res.json({ greeting: 'Hi! How can I help you today?', systemPrompt: null });
 
@@ -750,7 +812,7 @@ Remember: #1 job = capture leads, #2 = answer questions about ${onboard.business
 });
 
 // ── Admin: Get Onboarding Submissions ─────────────────────────
-app.get('/api/admin/onboarding', (req, res) => {
+app.get('/api/admin/onboarding', async (req, res) => {
   try {
     const data = JSON.parse(fs.readFileSync(onboardingFile));
     res.json(data);
