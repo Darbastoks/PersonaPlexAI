@@ -3,75 +3,234 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ChatVora — Lead Manager</title>
+  <title>ChatVora — Leads Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0a0a0a; --surface: #111111; --border: #222222; --text: #ffffff;
-      --text-secondary: #888888; --text-muted: #555555;
+      --bg: #0a0a0a; --surface: #111111; --surface-2: #1a1a1a; --border: #222222;
+      --text: #ffffff; --text-secondary: #888888; --text-muted: #555555;
       --green: #00d47e; --green-dim: rgba(0,212,126,0.1); --green-border: rgba(0,212,126,0.25);
-      --radius: 12px; --radius-sm: 8px;
+      --red: #ef4444; --yellow: #eab308;
+      --radius: 12px;
     }
-    body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; padding: 40px; }
-    .container { max-width: 900px; margin: 0 auto; }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
 
-    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
-    .header h1 { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.5px; }
-    .header a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: color 0.2s; }
-    .header a:hover { color: var(--text); }
-    .header p { color: var(--text-secondary); font-size: 0.85rem; }
+    /* Nav */
+    nav { padding: 16px 40px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+    .nav-logo { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text); }
+    .nav-logo .dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; box-shadow: 0 0 8px var(--green); }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .nav-right a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; }
+    .pro-badge { background: var(--green); color: #000; padding: 4px 10px; border-radius: 999px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px; }
 
-    table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
-    th, td { padding: 14px 18px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
-    th { background: rgba(255,255,255,0.03); color: var(--text-secondary); font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px; }
-    tr:hover { background: rgba(255,255,255,0.02); }
-    .status { color: var(--green); font-weight: 600; }
-    .empty { text-align: center; padding: 40px; color: var(--text-muted); }
+    /* Auth screen */
+    .auth-screen { max-width: 400px; margin: 120px auto; text-align: center; padding: 0 20px; }
+    .auth-screen h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; }
+    .auth-screen p { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 24px; }
+    .auth-input { width: 100%; padding: 14px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.9rem; font-family: 'Inter', sans-serif; outline: none; margin-bottom: 12px; }
+    .auth-input:focus { border-color: var(--green); }
+    .auth-btn { width: 100%; padding: 14px; background: var(--green); color: #000; border: none; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; font-family: 'Inter', sans-serif; }
+    .auth-error { color: var(--red); font-size: 0.8rem; margin-top: 8px; display: none; }
+
+    /* Dashboard */
+    .dashboard { display: none; padding: 32px 40px; max-width: 1200px; margin: 0 auto; }
+    .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+    .dash-header h1 { font-size: 1.5rem; font-weight: 700; }
+    .stat-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+    .stat-card .label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; }
+    .stat-card .value { font-size: 1.8rem; font-weight: 800; color: var(--green); }
+    .stat-card .sub { font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px; }
+
+    /* Table */
+    .leads-section h2 { font-size: 1rem; font-weight: 600; margin-bottom: 16px; }
+    .leads-table { width: 100%; border-collapse: collapse; }
+    .leads-table th { text-align: left; padding: 10px 16px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 600; border-bottom: 1px solid var(--border); }
+    .leads-table td { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 0.85rem; color: var(--text-secondary); }
+    .leads-table tr:hover td { background: var(--surface); }
+    .leads-table .name { color: var(--text); font-weight: 500; }
+    .leads-table .time { font-size: 0.75rem; color: var(--text-muted); }
+    .source-badge { padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; }
+    .source-chatbot { background: var(--green-dim); color: var(--green); }
+    .source-form { background: rgba(234,179,8,0.1); color: var(--yellow); }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .empty-state .icon { font-size: 2rem; margin-bottom: 12px; }
+    .empty-state p { font-size: 0.9rem; }
+
+    /* Export */
+    .export-btn { padding: 8px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.8rem; cursor: pointer; font-family: 'Inter', sans-serif; }
+    .export-btn:hover { border-color: var(--green); }
+
+    @media (max-width: 768px) {
+      .stat-cards { grid-template-columns: repeat(2, 1fr); }
+      .dashboard { padding: 20px; }
+      .leads-table { font-size: 0.8rem; }
+      nav { padding: 16px 20px; }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <div>
-        <h1>Lead Manager</h1>
-        <p>Real-time view of your customers and automated handoffs.</p>
-      </div>
-      <a href="/admin.html">← Admin Panel</a>
+  <nav>
+    <a href="/" class="nav-logo"><span class="dot"></span> ChatVora</a>
+    <div class="nav-right">
+      <span class="pro-badge">PRO</span>
+      <a href="/" id="logoutBtn" style="display:none;">← Back to site</a>
+    </div>
+  </nav>
+
+  <!-- Auth Screen -->
+  <div class="auth-screen" id="authScreen">
+    <h1>Leads Dashboard</h1>
+    <p>Enter your dashboard key to view your captured leads.</p>
+    <input type="text" class="auth-input" id="dashKey" placeholder="Enter your dashboard key" autocomplete="off">
+    <button class="auth-btn" id="authBtn" onclick="authenticate()">Access Dashboard</button>
+    <p class="auth-error" id="authError">Invalid key. Check your welcome email for your dashboard key.</p>
+  </div>
+
+  <!-- Dashboard -->
+  <div class="dashboard" id="dashboard">
+    <div class="dash-header">
+      <h1>Your Leads</h1>
+      <button class="export-btn" onclick="exportCSV()">📥 Export CSV</button>
     </div>
 
-    <table>
-      <thead>
-        <tr><th>Date</th><th>Customer</th><th>Email</th><th>Amount</th><th>Status</th></tr>
-      </thead>
-      <tbody id="leads-table">
-        <tr><td colspan="5" class="empty">Loading...</td></tr>
-      </tbody>
-    </table>
+    <div class="stat-cards">
+      <div class="stat-card">
+        <div class="label">Total Leads</div>
+        <div class="value" id="statTotal">0</div>
+        <div class="sub">All time</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">This Week</div>
+        <div class="value" id="statWeek">0</div>
+        <div class="sub">Last 7 days</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Today</div>
+        <div class="value" id="statToday">0</div>
+        <div class="sub" id="statDate">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Source</div>
+        <div class="value" style="font-size: 1.2rem;">Chatbot</div>
+        <div class="sub">AI-captured</div>
+      </div>
+    </div>
+
+    <div class="leads-section">
+      <h2>All Captured Leads</h2>
+      <table class="leads-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Request</th>
+            <th>Source</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody id="leadsBody"></tbody>
+      </table>
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <div class="icon">📭</div>
+        <p>No leads yet. Once your chatbot captures a lead, it will appear here.</p>
+      </div>
+    </div>
   </div>
 
   <script>
-    async function loadLeads() {
+    let currentKey = '';
+    let allLeads = [];
+
+    // Check URL for key
+    const urlKey = new URLSearchParams(window.location.search).get('key');
+    if (urlKey) {
+      document.getElementById('dashKey').value = urlKey;
+      authenticate();
+    }
+
+    async function authenticate() {
+      const key = document.getElementById('dashKey').value.trim();
+      if (!key) return;
+
       try {
-        const resp = await fetch('/api/leads');
-        const leads = await resp.json();
-        const tbody = document.getElementById('leads-table');
-        if (leads.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="empty">No sales yet. Get out there and pitch!</td></tr>'; return; }
-        tbody.innerHTML = leads.map(l => `
-          <tr>
-            <td>${new Date(l.date).toLocaleDateString()}</td>
-            <td>${l.name}</td>
-            <td>${l.email}</td>
-            <td>$${l.amount}</td>
-            <td class="status">✓ Delivered</td>
-          </tr>
-        `).join('');
+        const resp = await fetch(`/api/leads?key=${encodeURIComponent(key)}`);
+        const data = await resp.json();
+
+        if (resp.ok && !data.error) {
+          currentKey = key;
+          allLeads = data;
+          document.getElementById('authScreen').style.display = 'none';
+          document.getElementById('dashboard').style.display = 'block';
+          document.getElementById('logoutBtn').style.display = 'block';
+          renderLeads(data);
+        } else {
+          document.getElementById('authError').style.display = 'block';
+        }
       } catch (e) {
-        document.getElementById('leads-table').innerHTML = '<tr><td colspan="5" class="empty" style="color:#ef4444;">Error loading leads.</td></tr>';
+        document.getElementById('authError').style.display = 'block';
       }
     }
-    loadLeads();
+
+    function renderLeads(leads) {
+      const body = document.getElementById('leadsBody');
+      const now = new Date();
+      const today = now.toDateString();
+      const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+
+      let todayCount = 0, weekCount = 0;
+
+      body.innerHTML = '';
+
+      if (leads.length === 0) {
+        document.getElementById('emptyState').style.display = 'block';
+      }
+
+      leads.forEach(lead => {
+        const date = new Date(lead.timestamp);
+        if (date.toDateString() === today) todayCount++;
+        if (date >= weekAgo) weekCount++;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="name">${lead.name || '—'}</td>
+          <td>${lead.email || '—'}</td>
+          <td>${lead.phone || '—'}</td>
+          <td>${lead.message || '—'}</td>
+          <td><span class="source-badge source-chatbot">${lead.source || 'chatbot'}</span></td>
+          <td class="time">${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</td>
+        `;
+        body.appendChild(tr);
+      });
+
+      document.getElementById('statTotal').textContent = leads.length;
+      document.getElementById('statWeek').textContent = weekCount;
+      document.getElementById('statToday').textContent = todayCount;
+      document.getElementById('statDate').textContent = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function exportCSV() {
+      if (allLeads.length === 0) return;
+      const headers = ['Name', 'Email', 'Phone', 'Request', 'Source', 'Date'];
+      const rows = allLeads.map(l => [
+        l.name || '', l.email || '', l.phone || '', l.message || '', l.source || '', l.timestamp || ''
+      ]);
+      const csv = [headers.join(','), ...rows.map(r => r.map(c => `"${c}"`).join(','))].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'chatvora-leads.csv';
+      a.click();
+    }
+
+    document.getElementById('dashKey').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') authenticate();
+    });
   </script>
 </body>
 </html>

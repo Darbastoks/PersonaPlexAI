@@ -201,10 +201,10 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-// ── Lead Capture (saves lead + emails business owner) ──────────
+// ── Lead Capture (saves lead + emails BOTH you and the client) ──────────
 app.post('/api/lead-capture', async (req, res) => {
   try {
-    const { name, email, phone, message, businessName, source } = req.body;
+    const { name, email, phone, message, businessName, source, clientKey, clientEmail } = req.body;
     if (!name && !email && !phone) return res.status(400).json({ error: 'No contact info' });
 
     const lead = {
@@ -214,6 +214,7 @@ app.post('/api/lead-capture', async (req, res) => {
       message: message || '',
       businessName: businessName || 'Website Visitor',
       source: source || 'chatbot',
+      clientKey: clientKey || 'default',
       timestamp: new Date().toISOString()
     };
 
@@ -221,9 +222,29 @@ app.post('/api/lead-capture', async (req, res) => {
     const leads = JSON.parse(fs.readFileSync(leadsFile));
     leads.push(lead);
     fs.writeFileSync(leadsFile, JSON.stringify(leads, null, 2));
-    console.log(`📩 New lead captured: ${lead.name} (${lead.email || lead.phone})`);
+    console.log(`📩 New lead captured: ${lead.name} (${lead.email || lead.phone}) for ${lead.businessName}`);
 
-    // Email notification to business owner (you)
+    const leadEmailHtml = `
+      <div style="font-family: -apple-system, sans-serif; padding: 24px; background: #111; color: #fff; border-radius: 12px; max-width: 500px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+          <div style="width: 8px; height: 8px; background: #00d47e; border-radius: 50%;"></div>
+          <span style="font-weight: 700;">ChatVora</span>
+        </div>
+        <h2 style="color: #00d47e; margin-bottom: 16px;">🔔 New Lead from Your Chatbot!</h2>
+        <div style="background: #1a1a1a; padding: 16px; border-radius: 8px; border: 1px solid #333;">
+          <p style="margin: 6px 0;"><strong style="color: #ccc;">Name:</strong> <span style="color: #fff;">${lead.name}</span></p>
+          ${lead.email ? `<p style="margin: 6px 0;"><strong style="color: #ccc;">Email:</strong> <span style="color: #fff;">${lead.email}</span></p>` : ''}
+          ${lead.phone ? `<p style="margin: 6px 0;"><strong style="color: #ccc;">Phone:</strong> <span style="color: #fff;">${lead.phone}</span></p>` : ''}
+          ${lead.message ? `<p style="margin: 6px 0;"><strong style="color: #ccc;">What they need:</strong> <span style="color: #fff;">${lead.message}</span></p>` : ''}
+        </div>
+        <p style="color: #888; font-size: 13px; margin-top: 16px;">⏰ ${new Date().toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+        <p style="color: #888; font-size: 13px;">💡 <strong>Tip:</strong> Follow up within 5 minutes — you're 21x more likely to convert this lead.</p>
+        <hr style="border: 1px solid #222; margin: 16px 0;">
+        <p style="color: #555; font-size: 11px;">Captured by ChatVora AI chatbot on ${lead.businessName}</p>
+      </div>
+    `;
+
+    // Email notification to ChatVora owner (you)
     try {
       const ownerEmail = process.env.SENDER_EMAIL;
       if (ownerEmail) {
@@ -231,23 +252,27 @@ app.post('/api/lead-capture', async (req, res) => {
           from: `"ChatVora Leads" <${ownerEmail}>`,
           to: ownerEmail,
           subject: `🔔 New Lead: ${lead.name} — ${lead.businessName}`,
-          html: `
-            <div style="font-family: sans-serif; padding: 24px; background: #111; color: #fff; border-radius: 12px; max-width: 500px;">
-              <h2 style="color: #00d47e; margin-bottom: 16px;">New Lead Captured!</h2>
-              <p><strong>Name:</strong> ${lead.name}</p>
-              ${lead.email ? `<p><strong>Email:</strong> ${lead.email}</p>` : ''}
-              ${lead.phone ? `<p><strong>Phone:</strong> ${lead.phone}</p>` : ''}
-              ${lead.message ? `<p><strong>What they need:</strong> ${lead.message}</p>` : ''}
-              <p><strong>Source:</strong> ${lead.source}</p>
-              <p><strong>Time:</strong> ${new Date().toLocaleString('en-US')}</p>
-              <hr style="border: 1px solid #333; margin: 16px 0;">
-              <p style="color: #888; font-size: 12px;">From ChatVora chatbot on ${lead.businessName}</p>
-            </div>
-          `
+          html: leadEmailHtml
         });
       }
     } catch (emailErr) {
-      console.error('Lead notification email failed:', emailErr.message);
+      console.error('Owner notification email failed:', emailErr.message);
+    }
+
+    // Email notification to the CLIENT (business owner)
+    try {
+      if (clientEmail && clientEmail.includes('@')) {
+        const ownerEmail = process.env.SENDER_EMAIL;
+        await transporter.sendMail({
+          from: `"ChatVora AI" <${ownerEmail}>`,
+          to: clientEmail,
+          subject: `🔔 New Lead: ${lead.name} — Your AI chatbot just captured a lead!`,
+          html: leadEmailHtml
+        });
+        console.log(`📧 Lead email sent to client: ${clientEmail}`);
+      }
+    } catch (emailErr) {
+      console.error('Client notification email failed:', emailErr.message);
     }
 
     res.json({ success: true });
@@ -269,7 +294,6 @@ app.post('/api/chat-log', (req, res) => {
     };
     const logs = JSON.parse(fs.readFileSync(chatLogsFile));
     logs.push(log);
-    // Keep only last 500 logs to prevent file from growing too large
     if (logs.length > 500) logs.splice(0, logs.length - 500);
     fs.writeFileSync(chatLogsFile, JSON.stringify(logs, null, 2));
     res.json({ success: true });
@@ -278,11 +302,28 @@ app.post('/api/chat-log', (req, res) => {
   }
 });
 
-// ── Get Leads (for admin panel) ──────────────────────────────
+// ── Get Leads (filtered by client key for dashboard) ──────────
 app.get('/api/leads', (req, res) => {
   try {
+    const key = req.query.key;
     const leads = JSON.parse(fs.readFileSync(leadsFile));
-    res.json(leads.reverse()); // Newest first
+    
+    if (key) {
+      // Filter leads for this specific client
+      const clientLeads = leads.filter(l => l.clientKey === key || key === process.env.ADMIN_KEY);
+      if (clientLeads.length === 0 && key !== process.env.ADMIN_KEY && key !== 'default') {
+        // Check if the key exists in customers
+        const customers = JSON.parse(fs.readFileSync(customersFile));
+        const validClient = customers.find(c => c.dashboardKey === key);
+        if (!validClient && key !== 'default') {
+          return res.status(403).json({ error: 'Invalid key' });
+        }
+      }
+      return res.json(clientLeads.reverse());
+    }
+    
+    // No key = return all (admin)
+    res.json(leads.reverse());
   } catch (e) {
     res.json([]);
   }
