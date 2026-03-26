@@ -3,65 +3,98 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ChatVora | Get Started</title>
+  <title>ChatVora — Get Started</title>
+  <meta name="description" content="Tell us about your business and we'll build your AI assistant.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root { --bg: #0f172a; --card: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.1); --blue: #3b82f6; --purple: #8b5cf6; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #e2e8f0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-    .container { max-width: 600px; width: 100%; }
-    .logo { text-align: center; margin-bottom: 2rem; }
-    .logo h1 { font-size: 2rem; background: linear-gradient(135deg, var(--blue), var(--purple)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-    .logo p { color: #94a3b8; margin-top: 0.5rem; font-size: 0.95rem; }
-    .form-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; backdrop-filter: blur(20px); }
-    .form-group { margin-bottom: 1.25rem; }
-    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #94a3b8; margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.5px; }
-    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.75rem 1rem; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 10px; color: #e2e8f0; font-size: 0.95rem; outline: none; transition: border 0.3s; }
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--blue); }
-    .form-group select { cursor: pointer; }
-    .form-group select option { background: #1e293b; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0a; --surface: #111111; --border: #222222; --text: #ffffff;
+      --text-secondary: #888888; --text-muted: #555555;
+      --green: #00d47e; --green-dim: rgba(0,212,126,0.1); --green-border: rgba(0,212,126,0.25);
+      --radius: 12px; --radius-sm: 8px;
+    }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px; -webkit-font-smoothing: antialiased; }
+    .container { max-width: 560px; width: 100%; }
+
+    /* ── Header ──────────── */
+    .header { text-align: center; margin-bottom: 32px; }
+    .header .back { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; margin-bottom: 20px; transition: color 0.2s; }
+    .header .back:hover { color: var(--text); }
+    .logo { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.5px; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; }
+    .logo .dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; box-shadow: 0 0 8px var(--green); }
+    .header p { color: var(--text-secondary); font-size: 0.9rem; }
+
+    /* ── Card ────────────── */
+    .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; }
+
+    /* ── Plan Selector ──── */
+    .plan-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 12px; }
+    .plan-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px; }
+    .plan-option { padding: 20px 16px; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; text-align: center; transition: all 0.2s; }
+    .plan-option:hover { border-color: #333; }
+    .plan-option.active { border-color: var(--green); background: var(--green-dim); }
+    .plan-option h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; }
+    .plan-option .price { font-size: 1.6rem; font-weight: 800; color: var(--green); }
+    .plan-option .desc { font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; }
+
+    /* ── Form Fields ────── */
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 12px 14px; background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text); font-size: 0.9rem; font-family: 'Inter', sans-serif;
+      outline: none; transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--green); }
+    .form-group select { cursor: pointer; -webkit-appearance: none; appearance: none; }
+    .form-group select option { background: var(--surface); }
     .form-group textarea { resize: vertical; min-height: 80px; }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .submit-btn { width: 100%; padding: 0.9rem; background: linear-gradient(135deg, var(--blue), var(--purple)); color: white; border: none; border-radius: 10px; font-size: 1.05rem; font-weight: 700; cursor: pointer; margin-top: 0.5rem; transition: opacity 0.3s, transform 0.2s; }
-    .submit-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .plan-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
-    .plan-option { padding: 1rem; background: rgba(255,255,255,0.04); border: 2px solid var(--border); border-radius: 12px; cursor: pointer; text-align: center; transition: all 0.3s; }
-    .plan-option.active { border-color: var(--blue); background: rgba(59,130,246,0.1); }
-    .plan-option h3 { font-size: 1.1rem; margin-bottom: 0.3rem; }
-    .plan-option .price { font-size: 1.5rem; font-weight: 800; background: linear-gradient(135deg, var(--blue), var(--purple)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-    .plan-option .desc { font-size: 0.75rem; color: #64748b; margin-top: 0.3rem; }
-    .secure { text-align: center; margin-top: 1rem; font-size: 0.8rem; color: #475569; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* ── Submit ──────────── */
+    .submit-btn {
+      width: 100%; padding: 14px; background: var(--green); color: #000; border: none;
+      border-radius: var(--radius-sm); font-size: 0.95rem; font-weight: 700; cursor: pointer;
+      font-family: 'Inter', sans-serif; margin-top: 8px; transition: all 0.2s;
+    }
+    .submit-btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,212,126,0.3); }
+    .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* ── Footer ──────────── */
+    .secure { text-align: center; margin-top: 16px; font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .lock-icon { color: var(--green); }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="logo">
-      <h1>⚡ ChatVora AI</h1>
+    <div class="header">
+      <a href="/" class="back">← Back to home</a>
+      <div class="logo"><span class="dot"></span> ChatVora</div>
       <p>Tell us about your business and we'll build your AI assistant.</p>
     </div>
 
     <div class="form-card">
       <form id="onboardForm">
-        <!-- Plan Selection -->
-        <label style="font-size:0.85rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.75rem;display:block;">Choose Your Plan</label>
+        <div class="plan-label">Choose your plan</div>
         <div class="plan-selector">
           <div class="plan-option active" onclick="selectPlan(this, 'setup')" data-plan="setup">
-            <h3>🚀 Setup</h3>
+            <h3>Setup</h3>
             <div class="price">$49</div>
-            <div class="desc">One-time setup & configuration</div>
+            <div class="desc">One-time configuration</div>
           </div>
           <div class="plan-option" onclick="selectPlan(this, 'subscription')" data-plan="subscription">
-            <h3>💎 Monthly</h3>
-            <div class="price">$29/mo</div>
-            <div class="desc">Hosting, updates & support</div>
+            <h3>Monthly</h3>
+            <div class="price">$29<span style="font-size:0.8rem;font-weight:400;color:var(--text-muted)">/mo</span></div>
+            <div class="desc">Hosting + updates + support</div>
           </div>
         </div>
 
-        <!-- Business Details -->
         <div class="row">
           <div class="form-group">
             <label>Business Name *</label>
-            <input type="text" name="businessName" required placeholder="e.g. Elite Dental Care">
+            <input type="text" name="businessName" required placeholder="Elite Dental Care">
           </div>
           <div class="form-group">
             <label>Industry *</label>
@@ -98,17 +131,17 @@
 
         <div class="form-group">
           <label>Business Hours</label>
-          <input type="text" name="hours" placeholder="e.g. Mon-Fri 9AM-6PM, Sat 10AM-2PM">
+          <input type="text" name="hours" placeholder="Mon-Fri 9AM-6PM, Sat 10AM-2PM">
         </div>
 
         <div class="form-group">
-          <label>Key Services (comma separated)</label>
-          <input type="text" name="services" placeholder="e.g. Teeth Cleaning, Whitening, Root Canal">
+          <label>Key Services</label>
+          <input type="text" name="services" placeholder="Teeth Cleaning, Whitening, Root Canal">
         </div>
 
         <div class="form-group">
-          <label>What should the AI say when greeting callers?</label>
-          <textarea name="greeting" placeholder="e.g. Hi! Thanks for calling Elite Dental Care. How can I help you today?"></textarea>
+          <label>AI Greeting Message</label>
+          <textarea name="greeting" placeholder="Hi! Thanks for calling Elite Dental Care. How can I help you today?"></textarea>
         </div>
 
         <div class="form-group">
@@ -121,50 +154,33 @@
           </select>
         </div>
 
-        <button type="submit" class="submit-btn" id="submitBtn">Continue to Payment →</button>
+        <button type="submit" class="submit-btn" id="submitBtn">Continue to payment →</button>
       </form>
     </div>
-    <p class="secure">🔒 Secured by Stripe. Your data is encrypted.</p>
+    <p class="secure"><span class="lock-icon">✓</span> Secured by Stripe · Your data is encrypted</p>
   </div>
 
   <script>
     let selectedPlan = 'setup';
-
     function selectPlan(el, plan) {
       document.querySelectorAll('.plan-option').forEach(p => p.classList.remove('active'));
       el.classList.add('active');
       selectedPlan = plan;
     }
-
     document.getElementById('onboardForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('submitBtn');
       btn.disabled = true;
       btn.textContent = 'Processing...';
-
       const formData = new FormData(e.target);
       const data = Object.fromEntries(formData.entries());
       data.plan = selectedPlan;
-
       try {
-        const resp = await fetch('/api/onboard', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
+        const resp = await fetch('/api/onboard', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         const result = await resp.json();
-        if (result.url) {
-          window.location.href = result.url;
-        } else {
-          alert('Something went wrong. Please try again.');
-          btn.disabled = false;
-          btn.textContent = 'Continue to Payment →';
-        }
-      } catch (err) {
-        alert('Connection error. Please try again.');
-        btn.disabled = false;
-        btn.textContent = 'Continue to Payment →';
-      }
+        if (result.url) { window.location.href = result.url; }
+        else { alert('Something went wrong. Please try again.'); btn.disabled = false; btn.textContent = 'Continue to payment →'; }
+      } catch (err) { alert('Connection error. Please try again.'); btn.disabled = false; btn.textContent = 'Continue to payment →'; }
     });
   </script>
 </body>

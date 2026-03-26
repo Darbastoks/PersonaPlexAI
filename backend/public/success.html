@@ -3,87 +3,56 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Payment Successful | ChatVora</title>
+  <title>Payment Successful — ChatVora</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0f172a;
-      --text: #ffffff;
-      --primary: #3b82f6;
-      --accent: #8b5cf6;
+      --bg: #0a0a0a; --surface: #111111; --border: #222222; --text: #ffffff;
+      --text-secondary: #888888; --text-muted: #555555;
+      --green: #00d47e; --green-dim: rgba(0,212,126,0.1); --green-border: rgba(0,212,126,0.25);
+      --radius: 12px; --radius-sm: 8px;
     }
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-    }
-    .success-card {
-      max-width: 500px;
-      padding: 3rem;
-      background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 24px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-    }
-    .icon {
-      font-size: 5rem;
-      margin-bottom: 1.5rem;
-      display: inline-block;
-      animation: bounce 2s infinite;
-    }
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
-    }
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-      background: linear-gradient(to right, var(--primary), var(--accent));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    p {
-      color: rgba(255, 255, 255, 0.7);
-      line-height: 1.6;
-      margin-bottom: 2rem;
-    }
-    .btn {
-      display: inline-block;
-      padding: 1rem 2rem;
-      background: var(--primary);
-      color: white;
-      text-decoration: none;
-      border-radius: 12px;
-      font-weight: 600;
-      transition: all 0.3s ease;
-    }
-    .btn:hover {
-      background: #2563eb;
-      transform: translateY(-2px);
-    }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; -webkit-font-smoothing: antialiased; padding: 20px; }
+
+    .success-card { max-width: 480px; width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 48px 40px; }
+
+    .icon { width: 72px; height: 72px; background: var(--green-dim); border: 2px solid var(--green-border); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; animation: scaleIn 0.5s ease; }
+    .icon svg { width: 32px; height: 32px; }
+    @keyframes scaleIn { from { transform: scale(0); } to { transform: scale(1); } }
+
+    h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 8px; }
+    .subtitle { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 32px; }
+
+    .steps-box { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 24px; text-align: left; margin-bottom: 32px; }
+    .steps-box .label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 16px; }
+    .steps-box .step { display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; }
+    .steps-box .check { color: var(--green); font-weight: 700; font-size: 0.9rem; margin-top: 1px; }
+    .steps-box .step-text { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5; }
+
+    .btn { display: inline-block; padding: 12px 28px; background: var(--green); color: #000; font-weight: 600; font-size: 0.9rem; border-radius: var(--radius-sm); text-decoration: none; transition: all 0.2s; }
+    .btn:hover { opacity: 0.9; transform: translateY(-1px); }
   </style>
 </head>
 <body>
   <div class="success-card">
-    <div class="icon">✅</div>
-    <h1>Welcome to ChatVora!</h1>
-    <p>Your payment was successful and your account is being provisioned.</p>
-    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; margin: 25px 0; text-align: left;">
-      <p style="margin: 0; color: #94a3b8; font-size: 0.9rem;">Next Steps:</p>
-      <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #cbd5e1;">
-        <li>Check your email for the 1-line install script.</li>
-        <li>Paste the script into your website's <b>&lt;head&gt;</b>.</li>
-        <li>Your AI assistant will appear instantly!</li>
-      </ul>
+    <div class="icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#00d47e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
     </div>
-    <a href="/" class="btn">Back to Dashboard</a>
+    <h1>Payment successful</h1>
+    <p class="subtitle">Welcome to ChatVora. Your AI assistant is being provisioned.</p>
+
+    <div class="steps-box">
+      <div class="label">Next steps</div>
+      <div class="step"><span class="check">✓</span><span class="step-text">Check your email for the 1-line install script</span></div>
+      <div class="step"><span class="check">✓</span><span class="step-text">Paste the script into your website's <strong>&lt;head&gt;</strong></span></div>
+      <div class="step"><span class="check">✓</span><span class="step-text">Your AI assistant will appear instantly</span></div>
+    </div>
+
+    <a href="/" class="btn">Back to home</a>
   </div>
 </body>
 </html>

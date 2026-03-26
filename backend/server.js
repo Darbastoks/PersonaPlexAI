@@ -211,18 +211,22 @@ const sendWelcomeEmail = async (email, customerName) => {
     to: email,
     subject: `Welcome to ChatVora AI, ${customerName}! 🚀`,
     html: `
-      <div style="font-family: sans-serif; padding: 20px; color: #111; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px;">
-        <h2 style="color: #3b82f6;">Your AI Assistant is Ready!</h2>
-        <p>Hi ${customerName},</p>
-        <p>Thank you for choosing ChatVora. Your personalized AI Receptionist has been provisioned and is ready for duty.</p>
-        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-        <h3 style="color: #111;">How to Install:</h3>
-        <p>Simply copy and paste this one line of code into the <b>&lt;head&gt;</b> of your website:</p>
-        <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; font-family: monospace; font-size: 14px; overflow-x: auto;">
+      <div style="font-family: -apple-system, 'Segoe UI', sans-serif; padding: 32px; color: #ffffff; max-width: 560px; margin: 0 auto; background: #111111; border: 1px solid #222; border-radius: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 24px;">
+          <div style="width: 8px; height: 8px; background: #00d47e; border-radius: 50%;"></div>
+          <span style="font-weight: 700; font-size: 16px;">ChatVora</span>
+        </div>
+        <h2 style="color: #00d47e; font-size: 22px; margin-bottom: 8px;">Your AI Assistant is Ready</h2>
+        <p style="color: #888;">Hi ${customerName},</p>
+        <p style="color: #888;">Thank you for choosing ChatVora. Your personalized AI Receptionist has been provisioned and is ready.</p>
+        <hr style="border: none; border-top: 1px solid #222; margin: 24px 0;">
+        <p style="color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 12px;">How to install</p>
+        <p style="color: #ccc;">Copy and paste this one line into your website's <b>&lt;head&gt;</b>:</p>
+        <div style="background: #0a0a0a; padding: 16px; border-radius: 8px; border: 1px solid #222; font-family: monospace; font-size: 13px; color: #00d47e; overflow-x: auto; margin: 16px 0;">
           &lt;script src="https://${hostname}/widget.js"&gt;&lt;/script&gt;
         </div>
-        <p style="margin-top: 20px;">Once added, the AI chat bubble will appear instantly. You can test it by clicking the bubble and saying "Hello."</p>
-        <p style="color: #64748b; font-size: 12px; margin-top: 30px;">Best regards,<br>The ChatVora Team</p>
+        <p style="color: #888;">Once added, the AI chat bubble will appear instantly. Click it and say "Hello" to test.</p>
+        <p style="color: #555; font-size: 12px; margin-top: 32px;">— The ChatVora Team</p>
       </div>
     `
   };

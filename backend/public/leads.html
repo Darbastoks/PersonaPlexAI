@@ -1,67 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatVora | Lead Manager</title>
-    <style>
-        body { margin: 0; font-family: sans-serif; background: #0f172a; color: white; padding: 40px; }
-        .container { max-width: 900px; margin: 0 auto; }
-        h1 { background: linear-gradient(to right, #3b82f6, #8b5cf6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-        table { width: 100%; border-collapse: collapse; margin-top: 30px; background: rgba(255,255,255,0.05); border-radius: 12px; overflow: hidden; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        th { background: rgba(255,255,255,0.1); color: #3b82f6; }
-        tr:hover { background: rgba(255,255,255,0.08); }
-        .status { color: #10b981; font-weight: bold; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatVora — Lead Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0a; --surface: #111111; --border: #222222; --text: #ffffff;
+      --text-secondary: #888888; --text-muted: #555555;
+      --green: #00d47e; --green-dim: rgba(0,212,126,0.1); --green-border: rgba(0,212,126,0.25);
+      --radius: 12px; --radius-sm: 8px;
+    }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; padding: 40px; }
+    .container { max-width: 900px; margin: 0 auto; }
+
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+    .header h1 { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.5px; }
+    .header a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: color 0.2s; }
+    .header a:hover { color: var(--text); }
+    .header p { color: var(--text-secondary); font-size: 0.85rem; }
+
+    table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+    th, td { padding: 14px 18px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+    th { background: rgba(255,255,255,0.03); color: var(--text-secondary); font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px; }
+    tr:hover { background: rgba(255,255,255,0.02); }
+    .status { color: var(--green); font-weight: 600; }
+    .empty { text-align: center; padding: 40px; color: var(--text-muted); }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>ChatVora Lead Manager</h1>
+  <div class="container">
+    <div class="header">
+      <div>
+        <h1>Lead Manager</h1>
         <p>Real-time view of your customers and automated handoffs.</p>
-        
-        <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Customer Name</th>
-                    <th>Email</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody id="leads-table">
-                <tr><td colspan="5" style="text-align:center;">Loading leads...</td></tr>
-            </tbody>
-        </table>
+      </div>
+      <a href="/admin.html">← Admin Panel</a>
     </div>
 
-    <script>
-        async function loadLeads() {
-            try {
-                const resp = await fetch('/api/leads');
-                const leads = await resp.json();
-                const tbody = document.getElementById('leads-table');
-                
-                if (leads.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No sales yet. Get out there and pitch!</td></tr>';
-                    return;
-                }
+    <table>
+      <thead>
+        <tr><th>Date</th><th>Customer</th><th>Email</th><th>Amount</th><th>Status</th></tr>
+      </thead>
+      <tbody id="leads-table">
+        <tr><td colspan="5" class="empty">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
 
-                tbody.innerHTML = leads.map(l => `
-                    <tr>
-                        <td>${new Date(l.date).toLocaleDateString()}</td>
-                        <td>${l.name}</td>
-                        <td>${l.email}</td>
-                        <td>$${l.amount}</td>
-                        <td class="status">✅ Delivered</td>
-                    </tr>
-                `).join('');
-            } catch (e) {
-                document.getElementById('leads-table').innerHTML = '<tr><td colspan="5" style="text-align:center; color:#ef4444;">Error loading leads.</td></tr>';
-            }
-        }
-        loadLeads();
-    </script>
+  <script>
+    async function loadLeads() {
+      try {
+        const resp = await fetch('/api/leads');
+        const leads = await resp.json();
+        const tbody = document.getElementById('leads-table');
+        if (leads.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="empty">No sales yet. Get out there and pitch!</td></tr>'; return; }
+        tbody.innerHTML = leads.map(l => `
+          <tr>
+            <td>${new Date(l.date).toLocaleDateString()}</td>
+            <td>${l.name}</td>
+            <td>${l.email}</td>
+            <td>$${l.amount}</td>
+            <td class="status">✓ Delivered</td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        document.getElementById('leads-table').innerHTML = '<tr><td colspan="5" class="empty" style="color:#ef4444;">Error loading leads.</td></tr>';
+      }
+    }
+    loadLeads();
+  </script>
 </body>
 </html>
