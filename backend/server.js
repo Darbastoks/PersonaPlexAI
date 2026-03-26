@@ -244,7 +244,10 @@ app.post('/api/demo-chat', async (req, res) => {
       apiReq.end();
     });
 
-    res.json({ reply });
+    // Generate TTS audio for voice playback
+    const audio64 = await generateTTS(reply);
+
+    res.json({ reply, audioBase64: audio64 });
   } catch (e) {
     console.error('Demo chat error:', e.message);
     res.status(500).json({ error: e.message || 'AI error' });

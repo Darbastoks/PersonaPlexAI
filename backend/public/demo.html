@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ChatVora — Try the AI Demo</title>
-  <meta name="description" content="Experience ChatVora's AI chatbot live. Pick your industry and chat with a pre-configured AI assistant.">
+  <meta name="description" content="Experience ChatVora's AI chatbot live. Text or voice — pick your industry and try it now.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -13,6 +13,7 @@
       --bg: #0a0a0a; --surface: #111111; --surface-2: #1a1a1a; --border: #222222;
       --text: #ffffff; --text-secondary: #888888; --text-muted: #555555;
       --green: #00d47e; --green-dim: rgba(0,212,126,0.1); --green-border: rgba(0,212,126,0.25);
+      --red: #ef4444; --red-dim: rgba(239,68,68,0.1);
       --radius: 12px; --radius-sm: 8px;
     }
     body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
@@ -25,7 +26,7 @@
 
     /* ── Layout ────────── */
     .demo-layout { display: grid; grid-template-columns: 320px 1fr; min-height: calc(100vh - 57px); }
-    
+
     /* ── Sidebar ────────── */
     .sidebar { border-right: 1px solid var(--border); padding: 32px 24px; }
     .sidebar h2 { font-size: 1rem; font-weight: 600; margin-bottom: 6px; }
@@ -35,6 +36,7 @@
     .industry-btn:hover { border-color: #333; }
     .industry-btn.active { border-color: var(--green); background: var(--green-dim); }
     .industry-btn .icon { font-size: 1.1rem; }
+
     .sidebar-cta { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
     .sidebar-cta p { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px; }
     .btn-green { display: block; width: 100%; text-align: center; padding: 12px; background: var(--green); color: #000; font-weight: 600; font-size: 0.85rem; border-radius: var(--radius-sm); text-decoration: none; transition: all 0.2s; }
@@ -42,12 +44,19 @@
 
     /* ── Chat Area ───────── */
     .chat-area { display: flex; flex-direction: column; }
-    .chat-header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    .chat-header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .chat-header-left { display: flex; align-items: center; gap: 12px; }
     .chat-header .avatar { width: 36px; height: 36px; background: var(--green-dim); border: 1px solid var(--green-border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
     .chat-header .info h3 { font-size: 0.9rem; font-weight: 600; }
-    .chat-header .info p { font-size: 0.75rem; color: var(--green); }
-    .chat-header .badge-online { display: inline-flex; align-items: center; gap: 4px; }
-    .chat-header .badge-online::before { content: ''; width: 6px; height: 6px; background: var(--green); border-radius: 50%; }
+    .chat-header .info p { font-size: 0.75rem; color: var(--green); display: inline-flex; align-items: center; gap: 4px; }
+    .chat-header .info p::before { content: ''; width: 6px; height: 6px; background: var(--green); border-radius: 50%; }
+
+    /* Voice toggle */
+    .voice-toggle { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-secondary); }
+    .toggle-switch { width: 40px; height: 22px; background: var(--border); border-radius: 11px; cursor: pointer; position: relative; transition: background 0.2s; }
+    .toggle-switch.on { background: var(--green); }
+    .toggle-switch::after { content: ''; width: 18px; height: 18px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: transform 0.2s; }
+    .toggle-switch.on::after { transform: translateX(18px); }
 
     .messages { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
     .msg { max-width: 70%; padding: 12px 16px; border-radius: 16px; font-size: 0.9rem; line-height: 1.5; animation: fadeIn 0.3s ease; }
@@ -60,12 +69,19 @@
     .msg.typing .dots span:nth-child(3) { animation-delay: 0.4s; }
     @keyframes blink { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
 
-    .chat-input { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 12px; }
+    .chat-input { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 12px; align-items: center; }
     .chat-input input { flex: 1; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: 0.9rem; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; }
     .chat-input input:focus { border-color: var(--green); }
-    .chat-input button { padding: 12px 24px; background: var(--green); color: #000; border: none; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.85rem; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
-    .chat-input button:hover { opacity: 0.9; }
-    .chat-input button:disabled { opacity: 0.3; cursor: not-allowed; }
+    .chat-input button { padding: 12px 20px; border: none; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.85rem; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
+    .send-btn { background: var(--green); color: #000; }
+    .send-btn:hover { opacity: 0.9; }
+    .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* Mic button */
+    .mic-btn { background: var(--surface); color: var(--text); border: 1px solid var(--border); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; padding: 0; font-size: 1.1rem; }
+    .mic-btn:hover { border-color: var(--green); }
+    .mic-btn.recording { background: var(--red-dim); border-color: var(--red); animation: pulse-mic 1s infinite; }
+    @keyframes pulse-mic { 0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); } 50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } }
 
     /* ── Responsive ────── */
     @media (max-width: 768px) {
@@ -84,10 +100,10 @@
   </nav>
 
   <div class="demo-layout">
-    <!-- Sidebar: Industry Picker -->
+    <!-- Sidebar -->
     <div class="sidebar">
       <h2>Try the AI live</h2>
-      <p class="desc">Pick an industry below and chat with a pre-configured AI assistant. This is exactly what your customers will experience.</p>
+      <p class="desc">Pick an industry and chat with a pre-configured AI. Type or use your mic to talk. This is exactly what your customers will see.</p>
       <div class="industry-list">
         <button class="industry-btn active" onclick="switchIndustry(this, 'dental')"><span class="icon">🦷</span> Dental Office</button>
         <button class="industry-btn" onclick="switchIndustry(this, 'salon')"><span class="icon">💇</span> Hair Salon</button>
@@ -97,70 +113,50 @@
         <button class="industry-btn" onclick="switchIndustry(this, 'fitness')"><span class="icon">💪</span> Fitness / Gym</button>
       </div>
       <div class="sidebar-cta">
-        <p>Like what you see? Get your own AI assistant.</p>
+        <p>Like what you see? Get your own AI chatbot.</p>
         <a href="/onboard.html" class="btn-green">Get started — $49/mo</a>
       </div>
     </div>
 
-    <!-- Chat Area -->
+    <!-- Chat -->
     <div class="chat-area">
       <div class="chat-header">
-        <div class="avatar" id="chatAvatar">🦷</div>
-        <div class="info">
-          <h3 id="chatName">Bright Smile Dental</h3>
-          <p class="badge-online" id="chatStatus">Online</p>
+        <div class="chat-header-left">
+          <div class="avatar" id="chatAvatar">🦷</div>
+          <div class="info">
+            <h3 id="chatName">Bright Smile Dental</h3>
+            <p id="chatStatus">Online</p>
+          </div>
+        </div>
+        <div class="voice-toggle">
+          <span>Voice</span>
+          <div class="toggle-switch" id="voiceToggle" onclick="toggleVoice()"></div>
         </div>
       </div>
       <div class="messages" id="messages"></div>
       <div class="chat-input">
+        <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="Hold to talk">🎙️</button>
         <input type="text" id="chatInput" placeholder="Type a message..." autocomplete="off">
-        <button id="sendBtn" onclick="sendMessage()">Send</button>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
       </div>
     </div>
   </div>
 
   <script>
     const industries = {
-      dental: {
-        name: 'Bright Smile Dental',
-        icon: '🦷',
-        greeting: "Hi! Welcome to Bright Smile Dental. I'm the AI assistant here to help you. I can answer questions about our services, schedule appointments, or help with insurance inquiries. How can I help you today?",
-        systemPrompt: "You are the AI receptionist for Bright Smile Dental, a modern dental practice. Services: cleanings ($120), fillings ($200-350), whitening ($400), root canal ($800-1200), crowns ($1000-1500). Hours: Mon-Fri 8AM-6PM, Sat 9AM-2PM. Address: 123 Main St. Accept most insurance. You are friendly, professional, and try to book appointments. Keep responses under 2 sentences."
-      },
-      salon: {
-        name: 'Luxe Hair Studio',
-        icon: '💇',
-        greeting: "Hey there! Welcome to Luxe Hair Studio. I'm your AI assistant — I can help you book an appointment, check our services & pricing, or answer any questions. What can I do for you?",
-        systemPrompt: "You are the AI receptionist for Luxe Hair Studio, a premium hair salon. Services: women's cut ($65), men's cut ($35), color ($120-250), highlights ($150-300), blowout ($45), keratin treatment ($300). Hours: Tue-Sat 9AM-7PM. Accept walk-ins when available. You are warm, trendy, and try to book appointments. Keep responses under 2 sentences."
-      },
-      restaurant: {
-        name: 'The Golden Fork',
-        icon: '🍽️',
-        greeting: "Welcome to The Golden Fork! I'm the AI assistant. I can help you make a reservation, view our menu, check hours, or answer any questions about our restaurant. How can I help?",
-        systemPrompt: "You are the AI assistant for The Golden Fork, an upscale casual restaurant. Cuisine: American-Italian fusion. Reservation for parties of any size. Hours: Mon-Thu 11AM-10PM, Fri-Sat 11AM-11PM, Sun 10AM-9PM (brunch on weekends). Average entree: $18-35. Private dining available for events. You are welcoming and try to book reservations. Keep responses under 2 sentences."
-      },
-      law: {
-        name: 'Sterling & Associates',
-        icon: '⚖️',
-        greeting: "Welcome to Sterling & Associates, Attorneys at Law. I'm the AI assistant. I can help schedule a consultation, answer questions about our practice areas, or connect you with the right attorney. How may I assist you?",
-        systemPrompt: "You are the AI receptionist for Sterling & Associates, a mid-size law firm. Practice areas: personal injury, family law, estate planning, business law, criminal defense. Free initial consultations for personal injury. Other consultations: $150/hour. Hours: Mon-Fri 8:30AM-5:30PM. You are professional, reassuring, and try to book consultations. Keep responses under 2 sentences."
-      },
-      realestate: {
-        name: 'Pinnacle Realty',
-        icon: '🏠',
-        greeting: "Hi! Thanks for reaching out to Pinnacle Realty. I'm the AI assistant. I can help you find properties, schedule viewings, get market info, or connect you with an agent. What are you looking for?",
-        systemPrompt: "You are the AI assistant for Pinnacle Realty, a residential real estate agency. Services: buying, selling, rentals, property management. Currently listing homes from $250K-$2M. Free market analysis for sellers. Top-rated agents with 10+ years experience. You are enthusiastic, knowledgeable about local market, and try to schedule property viewings or connect with an agent. Keep responses under 2 sentences."
-      },
-      fitness: {
-        name: 'Iron Peak Fitness',
-        icon: '💪',
-        greeting: "Hey! Welcome to Iron Peak Fitness! I'm the AI assistant. I can help with membership info, class schedules, personal training, or answer any questions about our gym. What would you like to know?",
-        systemPrompt: "You are the AI assistant for Iron Peak Fitness, a modern gym and fitness center. Memberships: Basic ($29/mo, gym access), Premium ($59/mo, classes + gym), Elite ($99/mo, everything + personal training). Classes: yoga, HIIT, spin, boxing, pilates. Hours: Mon-Fri 5AM-10PM, Sat-Sun 7AM-8PM. Free 7-day trial available. You are energetic, motivating, and try to sign up new members or book trials. Keep responses under 2 sentences."
-      }
+      dental: { name: 'Bright Smile Dental', icon: '🦷', greeting: "Hi! Welcome to Bright Smile Dental. I can answer questions about our services, pricing, or hours. How can I help you?", systemPrompt: "You are the AI chatbot for Bright Smile Dental. Services: cleanings ($120), fillings ($200-350), whitening ($400), root canal ($800-1200), crowns ($1000-1500). Hours: Mon-Fri 8AM-6PM, Sat 9AM-2PM. Address: 123 Main St. Accept most insurance. Be friendly and concise. Keep responses under 2 sentences." },
+      salon: { name: 'Luxe Hair Studio', icon: '💇', greeting: "Hey! Welcome to Luxe Hair Studio. I can help with pricing, services, or availability. What would you like to know?", systemPrompt: "You are the AI chatbot for Luxe Hair Studio. Services: women's cut ($65), men's cut ($35), color ($120-250), highlights ($150-300), blowout ($45), keratin ($300). Hours: Tue-Sat 9AM-7PM. Be warm and concise. Keep responses under 2 sentences." },
+      restaurant: { name: 'The Golden Fork', icon: '🍽️', greeting: "Welcome to The Golden Fork! I can help with our menu, hours, or reservations. What would you like to know?", systemPrompt: "You are the AI chatbot for The Golden Fork restaurant. Cuisine: American-Italian fusion. Hours: Mon-Thu 11AM-10PM, Fri-Sat 11AM-11PM, Sun 10AM-9PM. Average entree: $18-35. Private dining available. Be welcoming and concise. Keep responses under 2 sentences." },
+      law: { name: 'Sterling & Associates', icon: '⚖️', greeting: "Welcome to Sterling & Associates. I can answer questions about our practice areas, consultation fees, or office hours.", systemPrompt: "You are the AI chatbot for Sterling & Associates law firm. Practice areas: personal injury, family law, estate planning, business law. Free consultations for personal injury. Other consultations: $150/hour. Hours: Mon-Fri 8:30AM-5:30PM. Be professional and concise. Keep responses under 2 sentences." },
+      realestate: { name: 'Pinnacle Realty', icon: '🏠', greeting: "Hi! Thanks for reaching out to Pinnacle Realty. I can help with property info, market questions, or connect you with an agent.", systemPrompt: "You are the AI chatbot for Pinnacle Realty. Services: buying, selling, rentals. Listings from $250K-$2M. Free market analysis for sellers. Be enthusiastic and concise. Keep responses under 2 sentences." },
+      fitness: { name: 'Iron Peak Fitness', icon: '💪', greeting: "Hey! Welcome to Iron Peak Fitness. I can help with membership info, class schedules, or pricing. What can I do for you?", systemPrompt: "You are the AI chatbot for Iron Peak Fitness. Memberships: Basic ($29/mo, gym access), Premium ($59/mo, classes + gym), Elite ($99/mo, everything + PT). Classes: yoga, HIIT, spin, boxing. Hours: Mon-Fri 5AM-10PM, Sat-Sun 7AM-8PM. Free 7-day trial. Be energetic and concise. Keep responses under 2 sentences." }
     };
 
     let currentIndustry = 'dental';
     let history = [];
+    let voiceOn = false;
+    let mediaRecorder = null;
+    let isRecording = false;
 
     function switchIndustry(el, industry) {
       document.querySelectorAll('.industry-btn').forEach(b => b.classList.remove('active'));
@@ -170,8 +166,7 @@
       const config = industries[industry];
       document.getElementById('chatAvatar').textContent = config.icon;
       document.getElementById('chatName').textContent = config.name;
-      const msgs = document.getElementById('messages');
-      msgs.innerHTML = '';
+      document.getElementById('messages').innerHTML = '';
       addMessage(config.greeting, 'bot');
     }
 
@@ -200,10 +195,23 @@
       if (el) el.remove();
     }
 
-    async function sendMessage() {
+    function toggleVoice() {
+      voiceOn = !voiceOn;
+      document.getElementById('voiceToggle').classList.toggle('on', voiceOn);
+    }
+
+    function playAudio(base64) {
+      if (!base64) return;
+      try {
+        const audio = new Audio('data:audio/mp3;base64,' + base64);
+        audio.play().catch(() => {});
+      } catch(e) {}
+    }
+
+    async function sendMessage(overrideMsg) {
       const input = document.getElementById('chatInput');
       const btn = document.getElementById('sendBtn');
-      const msg = input.value.trim();
+      const msg = overrideMsg || input.value.trim();
       if (!msg) return;
 
       addMessage(msg, 'user');
@@ -220,7 +228,7 @@
           body: JSON.stringify({
             message: msg,
             systemPrompt: config.systemPrompt,
-            history: history.slice(-6) // Keep last 3 exchanges for context
+            history: history.slice(-6)
           })
         });
         const data = await resp.json();
@@ -228,6 +236,10 @@
         if (data.reply) {
           addMessage(data.reply, 'bot');
           history.push({ role: 'assistant', content: data.reply });
+          // Play voice if enabled
+          if (voiceOn && data.audioBase64) {
+            playAudio(data.audioBase64);
+          }
         } else {
           addMessage("Sorry, I'm having a moment. Please try again!", 'bot');
         }
@@ -239,12 +251,78 @@
       input.focus();
     }
 
+    // Mic - speech recognition
+    async function toggleMic() {
+      const micBtn = document.getElementById('micBtn');
+
+      if (isRecording) {
+        // Stop recording
+        isRecording = false;
+        micBtn.classList.remove('recording');
+        micBtn.textContent = '🎙️';
+        if (window.recognition) {
+          window.recognition.stop();
+        }
+        return;
+      }
+
+      // Check for browser support
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        addMessage("Voice input isn't supported in your browser. Try Chrome or Edge.", 'bot');
+        return;
+      }
+
+      isRecording = true;
+      micBtn.classList.add('recording');
+      micBtn.textContent = '⏹️';
+
+      // Enable voice responses automatically when using mic
+      if (!voiceOn) {
+        voiceOn = true;
+        document.getElementById('voiceToggle').classList.add('on');
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      window.recognition = recognition;
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        isRecording = false;
+        micBtn.classList.remove('recording');
+        micBtn.textContent = '🎙️';
+        if (transcript) {
+          sendMessage(transcript);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        isRecording = false;
+        micBtn.classList.remove('recording');
+        micBtn.textContent = '🎙️';
+        if (event.error === 'not-allowed') {
+          addMessage("Microphone access denied. Please allow mic access in your browser settings.", 'bot');
+        }
+      };
+
+      recognition.onend = () => {
+        isRecording = false;
+        micBtn.classList.remove('recording');
+        micBtn.textContent = '🎙️';
+      };
+
+      recognition.start();
+    }
+
     // Enter key to send
     document.getElementById('chatInput').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') sendMessage();
     });
 
-    // Init with dental greeting
+    // Init
     addMessage(industries.dental.greeting, 'bot');
   </script>
 </body>
