@@ -55,11 +55,26 @@ class LRUCache {
 }
 const replyCache = new LRUCache(200);
 
+// ── Leads & Chat Logs Storage ──────────────────────────────────
+const leadsFile = path.join(__dirname, 'leads.json');
+const chatLogsFile = path.join(__dirname, 'chat-logs.json');
+if (!fs.existsSync(leadsFile)) fs.writeFileSync(leadsFile, JSON.stringify([]));
+if (!fs.existsSync(chatLogsFile)) fs.writeFileSync(chatLogsFile, JSON.stringify([]));
+
 // ── Groq LLM ──────────────────────────────────────────────────
 const GROQ_API_KEY = process.env.GROQ_API_KEY || '';
 
-async function callGroq(userMessage, history = []) {
-  const systemPrompt = 'You are Persona, a highly intelligent AI agency receptionist. Answer concisely in 1-2 sentences.';
+const DEFAULT_SYSTEM_PROMPT = `You are an AI chatbot assistant for a local business. Your goals:
+1. Answer questions about the business helpfully and concisely (1-2 sentences max)
+2. ALWAYS try to capture the visitor's contact info naturally. After answering 2-3 questions, say something like "I'd love to help further! Can I get your name and best phone number or email so we can follow up?"
+3. If they want to schedule/book, say: "I'd love to set that up for you! Can I get your name, phone number, and preferred date/time? Our team will confirm within an hour."
+4. If they share contact info (name, email, phone), acknowledge it warmly and say their info has been noted
+5. Be warm, professional, and concise. Never make up information you don't have.
+6. If asked about something you don't know, say "Great question! Let me get someone from our team to help with that. Can I get your name and number so they can reach you?"
+Remember: Your #1 job is capturing leads, #2 is answering questions.`;
+
+async function callGroq(userMessage, history = [], customPrompt = null) {
+  const systemPrompt = customPrompt || DEFAULT_SYSTEM_PROMPT;
   const payload = JSON.stringify({
     model: 'llama-3.3-70b-versatile',
     messages: [
@@ -154,13 +169,13 @@ const stats = { totalRequests: 0, avgLlmMs: 0, avgTtsMs: 0, cacheHits: 0 };
 app.post('/api/chat', async (req, res) => {
   const started = Date.now();
   try {
-    const { message, history = [] } = req.body;
+    const { message, history = [], systemPrompt } = req.body;
     if (!message) return res.status(400).json({ error: 'No message' });
 
     stats.totalRequests++;
     
     // Only cache pure zero-history queries
-    if (history.length === 0) {
+    if (history.length === 0 && !systemPrompt) {
       const cached = replyCache.get(message.toLowerCase().trim());
       if (cached) {
         stats.cacheHits++;
@@ -172,15 +187,104 @@ app.post('/api/chat', async (req, res) => {
       return res.status(500).json({ error: 'Missing GROQ_API_KEY environment variable on Render!' });
     }
 
-    const aiReply = await callGroq(message, history);
+    const aiReply = await callGroq(message, history, systemPrompt || null);
     const audio64 = await generateTTS(aiReply);
     const resp = { reply: aiReply, audioBase64: audio64, latencyMs: Date.now() - started };
 
-    replyCache.set(message.toLowerCase().trim(), { reply: aiReply, audioBase64: audio64 });
+    if (!systemPrompt) {
+      replyCache.set(message.toLowerCase().trim(), { reply: aiReply, audioBase64: audio64 });
+    }
     res.json(resp);
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Failed' });
+  }
+});
+
+// ── Lead Capture (saves lead + emails business owner) ──────────
+app.post('/api/lead-capture', async (req, res) => {
+  try {
+    const { name, email, phone, message, businessName, source } = req.body;
+    if (!name && !email && !phone) return res.status(400).json({ error: 'No contact info' });
+
+    const lead = {
+      name: name || 'Unknown',
+      email: email || '',
+      phone: phone || '',
+      message: message || '',
+      businessName: businessName || 'Website Visitor',
+      source: source || 'chatbot',
+      timestamp: new Date().toISOString()
+    };
+
+    // Save to file
+    const leads = JSON.parse(fs.readFileSync(leadsFile));
+    leads.push(lead);
+    fs.writeFileSync(leadsFile, JSON.stringify(leads, null, 2));
+    console.log(`📩 New lead captured: ${lead.name} (${lead.email || lead.phone})`);
+
+    // Email notification to business owner (you)
+    try {
+      const ownerEmail = process.env.SENDER_EMAIL;
+      if (ownerEmail) {
+        await transporter.sendMail({
+          from: `"ChatVora Leads" <${ownerEmail}>`,
+          to: ownerEmail,
+          subject: `🔔 New Lead: ${lead.name} — ${lead.businessName}`,
+          html: `
+            <div style="font-family: sans-serif; padding: 24px; background: #111; color: #fff; border-radius: 12px; max-width: 500px;">
+              <h2 style="color: #00d47e; margin-bottom: 16px;">New Lead Captured!</h2>
+              <p><strong>Name:</strong> ${lead.name}</p>
+              ${lead.email ? `<p><strong>Email:</strong> ${lead.email}</p>` : ''}
+              ${lead.phone ? `<p><strong>Phone:</strong> ${lead.phone}</p>` : ''}
+              ${lead.message ? `<p><strong>What they need:</strong> ${lead.message}</p>` : ''}
+              <p><strong>Source:</strong> ${lead.source}</p>
+              <p><strong>Time:</strong> ${new Date().toLocaleString('en-US')}</p>
+              <hr style="border: 1px solid #333; margin: 16px 0;">
+              <p style="color: #888; font-size: 12px;">From ChatVora chatbot on ${lead.businessName}</p>
+            </div>
+          `
+        });
+      }
+    } catch (emailErr) {
+      console.error('Lead notification email failed:', emailErr.message);
+    }
+
+    res.json({ success: true });
+  } catch (e) {
+    console.error('Lead capture error:', e);
+    res.status(500).json({ error: 'Failed to save lead' });
+  }
+});
+
+// ── Chat Log ──────────────────────────────────────────────────
+app.post('/api/chat-log', (req, res) => {
+  try {
+    const { messages, businessName, sessionId } = req.body;
+    const log = {
+      sessionId: sessionId || Date.now().toString(),
+      businessName: businessName || 'Unknown',
+      messages: messages || [],
+      timestamp: new Date().toISOString()
+    };
+    const logs = JSON.parse(fs.readFileSync(chatLogsFile));
+    logs.push(log);
+    // Keep only last 500 logs to prevent file from growing too large
+    if (logs.length > 500) logs.splice(0, logs.length - 500);
+    fs.writeFileSync(chatLogsFile, JSON.stringify(logs, null, 2));
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed' });
+  }
+});
+
+// ── Get Leads (for admin panel) ──────────────────────────────
+app.get('/api/leads', (req, res) => {
+  try {
+    const leads = JSON.parse(fs.readFileSync(leadsFile));
+    res.json(leads.reverse()); // Newest first
+  } catch (e) {
+    res.json([]);
   }
 });
 // ── Demo Chat (Custom System Prompt for Demo Page) ──────────────
