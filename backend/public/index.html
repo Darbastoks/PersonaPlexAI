@@ -445,16 +445,44 @@
       const isAnnual = toggle.checked;
       const billing = isAnnual ? 'annual' : 'monthly';
       
+      const sM = parseInt(priceStarter.getAttribute('data-monthly'));
+      const sA = parseInt(priceStarter.getAttribute('data-annual'));
+      const pM = parseInt(pricePro.getAttribute('data-monthly'));
+      const pA = parseInt(pricePro.getAttribute('data-annual'));
+
+      function animateValue(obj, start, end, duration, prefix = '', suffix = '') {
+        let startTimestamp = null;
+        const step = (timestamp) => {
+          if (!startTimestamp) startTimestamp = timestamp;
+          const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+          const easeOutQuad = progress * (2 - progress);
+          const current = Math.floor(easeOutQuad * (end - start) + start);
+          obj.innerHTML = prefix + '$' + current + suffix;
+          if (progress < 1) window.requestAnimationFrame(step);
+          else obj.innerHTML = prefix + '$' + end + suffix;
+        };
+        window.requestAnimationFrame(step);
+      }
+      
       if(isAnnual) {
         labelMonthly.classList.remove('active');
         labelAnnual.classList.add('active');
-        priceStarter.innerHTML = '<span style="color:#ff4a4a;text-decoration:line-through;font-size:0.5em;margin-right:10px;vertical-align:middle;opacity:0.8;">$' + priceStarter.getAttribute('data-monthly') + '</span>$' + priceStarter.getAttribute('data-annual') + '<span>/mo</span>';
-        pricePro.innerHTML = '<span style="color:#ff4a4a;text-decoration:line-through;font-size:0.5em;margin-right:10px;vertical-align:middle;opacity:0.8;">$' + pricePro.getAttribute('data-monthly') + '</span>$' + pricePro.getAttribute('data-annual') + '<span>/mo</span>';
+        
+        const prefixS = '<span style="color:#ff4a4a;text-decoration:line-through;font-size:0.5em;margin-right:10px;vertical-align:middle;opacity:0.8;">$' + sM + '</span>';
+        const prefixP = '<span style="color:#ff4a4a;text-decoration:line-through;font-size:0.5em;margin-right:10px;vertical-align:middle;opacity:0.8;">$' + pM + '</span>';
+        
+        animateValue(priceStarter, sM, sA, 600, prefixS, '<span>/mo</span>');
+        animateValue(pricePro, pM, pA, 600, prefixP, '<span>/mo</span>');
+        
+        priceStarter.style.color = 'var(--accent, #00d47e)';
+        pricePro.style.color = 'var(--accent, #00d47e)';
+        setTimeout(() => { priceStarter.style.color = ''; pricePro.style.color = ''; }, 600);
       } else {
         labelMonthly.classList.add('active');
         labelAnnual.classList.remove('active');
-        priceStarter.innerHTML = '$' + priceStarter.getAttribute('data-monthly') + '<span>/mo</span>';
-        pricePro.innerHTML = '$' + pricePro.getAttribute('data-monthly') + '<span>/mo</span>';
+        
+        animateValue(priceStarter, sA, sM, 400, '', '<span>/mo</span>');
+        animateValue(pricePro, pA, pM, 400, '', '<span>/mo</span>');
       }
       
       btnStarter.href = '/onboard.html?plan=starter&billing=' + billing;
