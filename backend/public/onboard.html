@@ -146,7 +146,7 @@
         </div>
 
         <div class="form-group">
-          <label>Booking / Scheduling Link (Calendly, Acuity, etc.)</label>
+          <label>Booking / Scheduling Link</label>
           <input type="url" name="bookingLink" placeholder="https://calendly.com/your-business">
         </div>
 
@@ -155,9 +155,27 @@
           <textarea name="faq" placeholder="Do you take insurance? Yes, we accept most major insurance.&#10;Is parking available? Yes, free parking in our lot." rows="3"></textarea>
         </div>
 
-        <div class="form-group">
-          <label>What should the AI chatbot say first?</label>
-          <textarea name="greeting" placeholder="Hi! Thanks for visiting Elite Dental Care. How can I help you today?"></textarea>
+        <!-- Tier Specific: Growth & Elite -->
+        <div class="form-group tier-field growth-elite-only" style="display: none;">
+          <label>Lead Forwarding Email (Growth & Elite Feature)</label>
+          <input type="email" name="leadEmail" placeholder="Where should we send captured leads? (e.g. sales@yourbusiness.com)">
+        </div>
+
+        <!-- Tier Specific: Elite Only -->
+        <div class="form-group tier-field elite-only" style="display: none; background: rgba(0,255,136,0.05); padding: 16px; border-radius: 8px; border: 1px solid var(--green);">
+          <label style="color: var(--green);">Voice AI Personality (Elite Feature)</label>
+          <select name="voiceId">
+            <option value="nova">Nova - Professional Female (Default)</option>
+            <option value="echo">Echo - Friendly Male</option>
+            <option value="shimmer">Shimmer - Warm Female</option>
+            <option value="onyx">Onyx - Deep Male</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border);">
+          <label>Free White-Glove Installation (Optional)</label>
+          <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">Not tech savvy? Simply provide your website builder login or your developer's email, and our team will install the widget onto your site for you.</p>
+          <input type="text" name="installDetails" placeholder="Developer email, or Wix/Wordpress login details...">
         </div>
 
         <button type="submit" class="submit-btn" id="submitBtn">Continue to payment →</button>
@@ -178,6 +196,15 @@
       document.getElementById('price-elite-val').innerHTML = '<span style="color:rgba(255,255,255,0.4);text-decoration:line-through;font-size:0.55em;margin-right:8px;vertical-align:middle;">$199</span>$149<span class="period">/mo</span><div style="font-size:10px; font-weight: normal; margin-top:-4px; color:#888;">Billed $1788 annually</div>';
     }
 
+    function updateFormLogic(plan) {
+      document.querySelectorAll('.tier-field').forEach(el => el.style.display = 'none');
+      if (plan === 'elite') {
+        document.querySelectorAll('.growth-elite-only, .elite-only').forEach(el => el.style.display = 'block');
+      } else if (plan === 'growth') {
+        document.querySelectorAll('.growth-elite-only').forEach(el => el.style.display = 'block');
+      }
+    }
+
     // Auto-select plan from URL param
     const preplan = urlParams.get('plan');
     if (preplan === 'growth' || preplan === 'elite') {
@@ -185,11 +212,13 @@
       document.getElementById('plan-starter').classList.remove('active');
       document.getElementById('plan-' + preplan).classList.add('active');
     }
+    updateFormLogic(selectedPlan);
 
     function selectPlan(el, plan) {
       document.querySelectorAll('.plan-option').forEach(p => p.classList.remove('active'));
       el.classList.add('active');
       selectedPlan = plan;
+      updateFormLogic(plan);
     }
 
     document.getElementById('onboardForm').addEventListener('submit', async (e) => {
