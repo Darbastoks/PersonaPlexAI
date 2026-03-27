@@ -27,7 +27,7 @@
 
     .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; }
     .plan-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 12px; }
-    .plan-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px; }
+    .plan-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
     .plan-option { padding: 20px 16px; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; text-align: center; transition: all 0.2s; position: relative; }
     .plan-option:hover { border-color: #333; }
     .plan-option.active { border-color: var(--green); background: var(--green-dim); }
@@ -75,15 +75,20 @@
         <div class="plan-label">Choose your plan</div>
         <div class="plan-selector">
           <div class="plan-option active" onclick="selectPlan(this, 'starter')" data-plan="starter" id="plan-starter">
-            <h3>Automated Lead Gen</h3>
-            <div class="price" id="price-starter-val">$149<span class="period">/mo</span></div>
-            <div class="desc">Unlimited Text AI · Lead Dashboard</div>
+            <h3>Starter</h3>
+            <div class="price" id="price-starter-val">$49<span class="period">/mo</span></div>
+            <div class="desc">Fast Text AI</div>
           </div>
-          <div class="plan-option" onclick="selectPlan(this, 'pro')" data-plan="pro" id="plan-pro">
+          <div class="plan-option" onclick="selectPlan(this, 'growth')" data-plan="growth" id="plan-growth">
             <span class="popular">POPULAR</span>
-            <h3>Voice AI + Concierge</h3>
-            <div class="price" id="price-pro-val">$399<span class="period">/mo</span></div>
-            <div class="desc">Text & Voice AI · Direct Calling</div>
+            <h3>Growth</h3>
+            <div class="price" id="price-growth-val">$99<span class="period">/mo</span></div>
+            <div class="desc">Lead Capture</div>
+          </div>
+          <div class="plan-option" onclick="selectPlan(this, 'elite')" data-plan="elite" id="plan-elite">
+            <h3>Elite</h3>
+            <div class="price" id="price-elite-val">$199<span class="period">/mo</span></div>
+            <div class="desc">Voice AI Concierge</div>
           </div>
         </div>
 
@@ -168,15 +173,17 @@
 
     // Update UI if Annual was selected
     if (billingPref === 'annual') {
-      document.getElementById('price-starter-val').innerHTML = '<span style="color:rgba(255,255,255,0.4);text-decoration:line-through;font-size:0.55em;margin-right:8px;vertical-align:middle;">$149</span>$99<span class="period">/mo</span><div style="font-size:10px; font-weight: normal; margin-top:-4px; color:#888;">Billed $1188 annually</div>';
-      document.getElementById('price-pro-val').innerHTML = '<span style="color:rgba(255,255,255,0.4);text-decoration:line-through;font-size:0.55em;margin-right:8px;vertical-align:middle;">$399</span>$299<span class="period">/mo</span><div style="font-size:10px; font-weight: normal; margin-top:-4px; color:#888;">Billed $3588 annually</div>';
+      document.getElementById('price-starter-val').innerHTML = '<span style="color:rgba(255,255,255,0.4);text-decoration:line-through;font-size:0.55em;margin-right:8px;vertical-align:middle;">$49</span>$39<span class="period">/mo</span><div style="font-size:10px; font-weight: normal; margin-top:-4px; color:#888;">Billed $468 annually</div>';
+      document.getElementById('price-growth-val').innerHTML = '<span style="color:rgba(255,255,255,0.4);text-decoration:line-through;font-size:0.55em;margin-right:8px;vertical-align:middle;">$99</span>$79<span class="period">/mo</span><div style="font-size:10px; font-weight: normal; margin-top:-4px; color:#888;">Billed $948 annually</div>';
+      document.getElementById('price-elite-val').innerHTML = '<span style="color:rgba(255,255,255,0.4);text-decoration:line-through;font-size:0.55em;margin-right:8px;vertical-align:middle;">$199</span>$149<span class="period">/mo</span><div style="font-size:10px; font-weight: normal; margin-top:-4px; color:#888;">Billed $1788 annually</div>';
     }
 
     // Auto-select plan from URL param
-    if (urlParams.get('plan') === 'pro') {
-      selectedPlan = 'pro';
+    const preplan = urlParams.get('plan');
+    if (preplan === 'growth' || preplan === 'elite') {
+      selectedPlan = preplan;
       document.getElementById('plan-starter').classList.remove('active');
-      document.getElementById('plan-pro').classList.add('active');
+      document.getElementById('plan-' + preplan).classList.add('active');
     }
 
     function selectPlan(el, plan) {

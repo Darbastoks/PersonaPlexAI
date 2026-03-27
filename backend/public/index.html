@@ -233,9 +233,9 @@
 
     .pricing-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 32px;
-      max-width: 900px;
+      max-width: 1100px;
       margin: 0 auto;
     }
     .pricing-card {
@@ -381,32 +381,43 @@
     <div class="pricing-grid">
       <!-- Starter -->
       <div class="pricing-card glass reveal">
-        <div class="price-name">Automated Lead Gen</div>
-        <div class="price" id="price-starter" data-monthly="149" data-annual="99">$149<span>/mo</span></div>
-        <div class="pricing-desc">Perfect for local businesses wanting 24/7 coverage.</div>
+        <div class="price-name">Starter</div>
+        <div class="price" id="price-starter" data-monthly="49" data-annual="39">$49<span>/mo</span></div>
+        <div class="pricing-desc">Perfect for testing the AI waters.</div>
         <ul class="features-list">
-          <li><i>✓</i> Advanced AI Text Chatbot</li>
-          <li><i>✓</i> Automatic Lead Capture</li>
+          <li><i>✓</i> Fast Text AI Chatbot</li>
+          <li><i>✓</i> Easy Web Widget</li>
           <li><i>✓</i> Custom Business Training</li>
+        </ul>
+        <a href="/onboard.html?plan=starter&billing=monthly" id="btn-starter" class="btn-block btn-outline">Get Starter</a>
+      </div>
+      
+      <!-- Growth -->
+      <div class="pricing-card glass pro reveal" style="transition-delay: 0.1s;">
+        <div class="price-name">Growth</div>
+        <div class="price" id="price-growth" data-monthly="99" data-annual="79">$99<span>/mo</span></div>
+        <div class="pricing-desc">The ultimate hands-off lead capture machine.</div>
+        <ul class="features-list">
+          <li><i>✓</i> <strong>Everything in Starter</strong></li>
+          <li><i>✓</i> Automatic Lead Capture</li>
           <li><i>✓</i> Private Lead Dashboard</li>
           <li><i>✓</i> Instant Email Notifications</li>
         </ul>
-        <a href="/onboard.html?plan=starter&billing=monthly" id="btn-starter" class="btn-block btn-outline">Start capturing leads</a>
+        <a href="/onboard.html?plan=growth&billing=monthly" id="btn-growth" class="btn-block btn-accent">Upgrade to Growth</a>
       </div>
-      
-      <!-- Pro -->
-      <div class="pricing-card glass pro reveal" style="transition-delay: 0.1s;">
-        <div class="price-name">Voice AI + Concierge</div>
-        <div class="price" id="price-pro" data-monthly="399" data-annual="299">$399<span>/mo</span></div>
-        <div class="pricing-desc">The ultimate hands-off customer experience.</div>
+
+      <!-- Elite -->
+      <div class="pricing-card glass reveal" style="transition-delay: 0.2s;">
+        <div class="price-name">Elite</div>
+        <div class="price" id="price-elite" data-monthly="199" data-annual="149">$199<span>/mo</span></div>
+        <div class="pricing-desc">A premium Voice AI concierge for luxury brands.</div>
         <ul class="features-list">
-          <li><i>✓</i> <strong>Everything in Lead Gen</strong></li>
-          <li><i>✓</i> Ultra-Low Latency Voice Chat</li>
-          <li><i>✓</i> Human-like Speech Synthesis</li>
-          <li><i>✓</i> Direct Calendar Routing</li>
+          <li><i>✓</i> <strong>Everything in Growth</strong></li>
+          <li><i>✓</i> Low Latency Voice Chat</li>
+          <li><i>✓</i> Human-like Speech Synth</li>
           <li><i>✓</i> Priority System Resources</li>
         </ul>
-        <a href="/onboard.html?plan=pro&billing=monthly" id="btn-pro" class="btn-block btn-accent">Upgrade to Premium Voice</a>
+        <a href="/onboard.html?plan=elite&billing=monthly" id="btn-elite" class="btn-block btn-outline">Get Elite</a>
       </div>
     </div>
   </section>
@@ -436,9 +447,11 @@
     // Billing Toggle Logic
     const toggle = document.getElementById('billingToggle');
     const priceStarter = document.getElementById('price-starter');
-    const pricePro = document.getElementById('price-pro');
+    const priceGrowth = document.getElementById('price-growth');
+    const priceElite = document.getElementById('price-elite');
     const btnStarter = document.getElementById('btn-starter');
-    const btnPro = document.getElementById('btn-pro');
+    const btnGrowth = document.getElementById('btn-growth');
+    const btnElite = document.getElementById('btn-elite');
     const labelMonthly = document.getElementById('label-monthly');
     const labelAnnual = document.getElementById('label-annual');
 
@@ -448,8 +461,10 @@
       
       const sM = parseInt(priceStarter.getAttribute('data-monthly'));
       const sA = parseInt(priceStarter.getAttribute('data-annual'));
-      const pM = parseInt(pricePro.getAttribute('data-monthly'));
-      const pA = parseInt(pricePro.getAttribute('data-annual'));
+      const gM = parseInt(priceGrowth.getAttribute('data-monthly'));
+      const gA = parseInt(priceGrowth.getAttribute('data-annual'));
+      const eM = parseInt(priceElite.getAttribute('data-monthly'));
+      const eA = parseInt(priceElite.getAttribute('data-annual'));
 
       function animateValue(obj, start, end, duration, prefix = '', suffix = '') {
         let startTimestamp = null;
@@ -470,24 +485,29 @@
         labelAnnual.classList.add('active');
         
         const prefixS = '<span style="color:rgba(255,255,255,0.4);text-decoration:line-through;font-size:0.55em;margin-right:10px;vertical-align:middle;">$' + sM + '</span>';
-        const prefixP = '<span style="color:rgba(255,255,255,0.4);text-decoration:line-through;font-size:0.55em;margin-right:10px;vertical-align:middle;">$' + pM + '</span>';
+        const prefixG = '<span style="color:rgba(255,255,255,0.4);text-decoration:line-through;font-size:0.55em;margin-right:10px;vertical-align:middle;">$' + gM + '</span>';
+        const prefixE = '<span style="color:rgba(255,255,255,0.4);text-decoration:line-through;font-size:0.55em;margin-right:10px;vertical-align:middle;">$' + eM + '</span>';
         
         animateValue(priceStarter, sM, sA, 600, prefixS, '<span>/mo</span>');
-        animateValue(pricePro, pM, pA, 600, prefixP, '<span>/mo</span>');
+        animateValue(priceGrowth, gM, gA, 600, prefixG, '<span>/mo</span>');
+        animateValue(priceElite, eM, eA, 600, prefixE, '<span>/mo</span>');
         
         priceStarter.style.color = 'var(--accent, #00d47e)';
-        pricePro.style.color = 'var(--accent, #00d47e)';
-        setTimeout(() => { priceStarter.style.color = ''; pricePro.style.color = ''; }, 600);
+        priceGrowth.style.color = 'var(--accent, #00d47e)';
+        priceElite.style.color = 'var(--accent, #00d47e)';
+        setTimeout(() => { priceStarter.style.color = ''; priceGrowth.style.color = ''; priceElite.style.color = ''; }, 600);
       } else {
         labelMonthly.classList.add('active');
         labelAnnual.classList.remove('active');
         
         animateValue(priceStarter, sA, sM, 400, '', '<span>/mo</span>');
-        animateValue(pricePro, pA, pM, 400, '', '<span>/mo</span>');
+        animateValue(priceGrowth, gA, gM, 400, '', '<span>/mo</span>');
+        animateValue(priceElite, eA, eM, 400, '', '<span>/mo</span>');
       }
       
       btnStarter.href = '/onboard.html?plan=starter&billing=' + billing;
-      btnPro.href = '/onboard.html?plan=pro&billing=' + billing;
+      btnGrowth.href = '/onboard.html?plan=growth&billing=' + billing;
+      btnElite.href = '/onboard.html?plan=elite&billing=' + billing;
     });
   </script>
 

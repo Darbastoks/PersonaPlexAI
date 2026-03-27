@@ -738,22 +738,31 @@ app.post('/api/onboard', async (req, res) => {
     fs.writeFileSync(onboardingFile, JSON.stringify(submissions, null, 2));
     console.log(`📋 New intake form: ${data.businessName} (${data.industry})`);
 
-    let unitAmount = 14900;
-    let productName = 'Automated Lead Gen (Monthly)';
+    let unitAmount = 4900;
+    let productName = 'Starter Plan (Monthly)';
     let interval = 'month';
 
     if (data.plan === 'starter' && data.billing === 'annual') { 
-      unitAmount = 118800; // $99/mo paid annually
-      productName = 'Automated Lead Gen (Annual)'; 
+      unitAmount = 46800; // $39/mo paid annually
+      productName = 'Starter Plan (Annual)'; 
       interval = 'year'; 
     }
-    if (data.plan === 'pro' && data.billing === 'monthly') { 
-      unitAmount = 39900; 
-      productName = 'Voice AI + Concierge (Monthly)'; 
+    if (data.plan === 'growth' && data.billing === 'monthly') { 
+      unitAmount = 9900; 
+      productName = 'Growth Plan (Monthly)'; 
     }
-    if (data.plan === 'pro' && data.billing === 'annual') { 
-      unitAmount = 358800; // $299/mo paid annually
-      productName = 'Voice AI + Concierge (Annual)'; 
+    if (data.plan === 'growth' && data.billing === 'annual') { 
+      unitAmount = 94800; // $79/mo paid annually
+      productName = 'Growth Plan (Annual)'; 
+      interval = 'year'; 
+    }
+    if (data.plan === 'elite' && data.billing === 'monthly') { 
+      unitAmount = 19900; 
+      productName = 'Elite Plan (Monthly)'; 
+    }
+    if (data.plan === 'elite' && data.billing === 'annual') { 
+      unitAmount = 178800; // $149/mo paid annually
+      productName = 'Elite Plan (Annual)'; 
       interval = 'year'; 
     }
 
