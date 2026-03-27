@@ -168,8 +168,8 @@
 
     // Update UI if Annual was selected
     if (billingPref === 'annual') {
-      document.getElementById('price-starter-val').innerHTML = '$119<span class="period">/mo</span><div style="font-size:10px; font-weight: normal; margin-top:-4px;">Billed $1428 annually</div>';
-      document.getElementById('price-pro-val').innerHTML = '$319<span class="period">/mo</span><div style="font-size:10px; font-weight: normal; margin-top:-4px;">Billed $3828 annually</div>';
+      document.getElementById('price-starter-val').innerHTML = '<span style="color:#ff4a4a;text-decoration:line-through;font-size:0.5em;margin-right:8px;vertical-align:middle;opacity:0.8;">$149</span>$99<span class="period">/mo</span><div style="font-size:10px; font-weight: normal; margin-top:-4px; color:#888;">Billed $1188 annually</div>';
+      document.getElementById('price-pro-val').innerHTML = '<span style="color:#ff4a4a;text-decoration:line-through;font-size:0.5em;margin-right:8px;vertical-align:middle;opacity:0.8;">$399</span>$299<span class="period">/mo</span><div style="font-size:10px; font-weight: normal; margin-top:-4px; color:#888;">Billed $3588 annually</div>';
     }
 
     // Auto-select plan from URL param

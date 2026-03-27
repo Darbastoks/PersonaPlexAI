@@ -374,14 +374,14 @@
         <input type="checkbox" id="billingToggle">
         <span class="slider"></span>
       </label>
-      <span class="toggle-label" id="label-annual">Annually <span class="save-badge">Save 20%</span></span>
+      <span class="toggle-label" id="label-annual">Annually <span class="save-badge">Save 33%</span></span>
     </div>
     
     <div class="pricing-grid">
       <!-- Starter -->
       <div class="pricing-card glass reveal">
         <div class="price-name">Automated Lead Gen</div>
-        <div class="price" id="price-starter" data-monthly="149" data-annual="119">$149<span>/mo</span></div>
+        <div class="price" id="price-starter" data-monthly="149" data-annual="99">$149<span>/mo</span></div>
         <div class="pricing-desc">Perfect for local businesses wanting 24/7 coverage.</div>
         <ul class="features-list">
           <li><i>✓</i> Advanced AI Text Chatbot</li>
@@ -396,7 +396,7 @@
       <!-- Pro -->
       <div class="pricing-card glass pro reveal" style="transition-delay: 0.1s;">
         <div class="price-name">Voice AI + Concierge</div>
-        <div class="price" id="price-pro" data-monthly="399" data-annual="319">$399<span>/mo</span></div>
+        <div class="price" id="price-pro" data-monthly="399" data-annual="299">$399<span>/mo</span></div>
         <div class="pricing-desc">The ultimate hands-off customer experience.</div>
         <ul class="features-list">
           <li><i>✓</i> <strong>Everything in Lead Gen</strong></li>
@@ -448,13 +448,14 @@
       if(isAnnual) {
         labelMonthly.classList.remove('active');
         labelAnnual.classList.add('active');
+        priceStarter.innerHTML = '<span style="color:#ff4a4a;text-decoration:line-through;font-size:0.5em;margin-right:10px;vertical-align:middle;opacity:0.8;">$' + priceStarter.getAttribute('data-monthly') + '</span>$' + priceStarter.getAttribute('data-annual') + '<span>/mo</span>';
+        pricePro.innerHTML = '<span style="color:#ff4a4a;text-decoration:line-through;font-size:0.5em;margin-right:10px;vertical-align:middle;opacity:0.8;">$' + pricePro.getAttribute('data-monthly') + '</span>$' + pricePro.getAttribute('data-annual') + '<span>/mo</span>';
       } else {
         labelMonthly.classList.add('active');
         labelAnnual.classList.remove('active');
+        priceStarter.innerHTML = '$' + priceStarter.getAttribute('data-monthly') + '<span>/mo</span>';
+        pricePro.innerHTML = '$' + pricePro.getAttribute('data-monthly') + '<span>/mo</span>';
       }
-
-      priceStarter.innerHTML = '$' + priceStarter.getAttribute(isAnnual ? 'data-annual' : 'data-monthly') + '<span>/mo</span>';
-      pricePro.innerHTML = '$' + pricePro.getAttribute(isAnnual ? 'data-annual' : 'data-monthly') + '<span>/mo</span>';
       
       btnStarter.href = '/onboard.html?plan=starter&billing=' + billing;
       btnPro.href = '/onboard.html?plan=pro&billing=' + billing;

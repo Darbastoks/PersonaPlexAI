@@ -743,7 +743,7 @@ app.post('/api/onboard', async (req, res) => {
     let interval = 'month';
 
     if (data.plan === 'starter' && data.billing === 'annual') { 
-      unitAmount = 142800; // $119/mo paid annually
+      unitAmount = 118800; // $99/mo paid annually
       productName = 'Automated Lead Gen (Annual)'; 
       interval = 'year'; 
     }
@@ -752,7 +752,7 @@ app.post('/api/onboard', async (req, res) => {
       productName = 'Voice AI + Concierge (Monthly)'; 
     }
     if (data.plan === 'pro' && data.billing === 'annual') { 
-      unitAmount = 382800; // $319/mo paid annually
+      unitAmount = 358800; // $299/mo paid annually
       productName = 'Voice AI + Concierge (Annual)'; 
       interval = 'year'; 
     }
