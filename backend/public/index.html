@@ -67,6 +67,7 @@
     .text-gradient {
       background: linear-gradient(135deg, #ffffff 0%, var(--accent) 100%);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
       color: transparent;
     }
@@ -468,8 +469,8 @@
         labelMonthly.classList.remove('active');
         labelAnnual.classList.add('active');
         
-        const prefixS = '<span style="color:#ff4a4a;text-decoration:line-through;font-size:0.5em;margin-right:10px;vertical-align:middle;opacity:0.8;">$' + sM + '</span>';
-        const prefixP = '<span style="color:#ff4a4a;text-decoration:line-through;font-size:0.5em;margin-right:10px;vertical-align:middle;opacity:0.8;">$' + pM + '</span>';
+        const prefixS = '<span style="color:rgba(255,255,255,0.4);text-decoration:line-through;font-size:0.55em;margin-right:10px;vertical-align:middle;">$' + sM + '</span>';
+        const prefixP = '<span style="color:rgba(255,255,255,0.4);text-decoration:line-through;font-size:0.55em;margin-right:10px;vertical-align:middle;">$' + pM + '</span>';
         
         animateValue(priceStarter, sM, sA, 600, prefixS, '<span>/mo</span>');
         animateValue(pricePro, pM, pA, 600, prefixP, '<span>/mo</span>');
