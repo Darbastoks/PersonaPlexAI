@@ -165,12 +165,17 @@
         <!-- Tier Specific: Elite Only -->
         <div class="form-group tier-field elite-only" style="display: none; background: rgba(0,255,136,0.05); padding: 16px; border-radius: 8px; border: 1px solid var(--green);">
           <label style="color: var(--green);">Voice AI Personality (Elite Feature)</label>
-          <select name="voiceId">
-            <option value="nova">Nova - Professional Female (Default)</option>
-            <option value="echo">Echo - Friendly Male</option>
-            <option value="shimmer">Shimmer - Warm Female</option>
-            <option value="onyx">Onyx - Deep Male</option>
-          </select>
+          <div style="display: flex; gap: 8px;">
+            <select name="voiceId" id="voiceSelect" style="flex: 1;">
+              <option value="nova">Nova - Professional Female (Default)</option>
+              <option value="echo">Echo - Friendly Male</option>
+              <option value="shimmer">Shimmer - Warm Female</option>
+              <option value="onyx">Onyx - Deep Male</option>
+            </select>
+            <button type="button" id="playVoiceBtn" style="background: rgba(0,255,136,0.1); border: 1px solid var(--green); color: var(--green); border-radius: var(--radius-sm); padding: 0 16px; cursor: pointer; font-weight: bold; transition: all 0.2s;">
+              ▶ Play
+            </button>
+          </div>
         </div>
 
         <div class="form-group" style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border);">
@@ -293,6 +298,45 @@
         if (result.url) { window.location.href = result.url; }
         else { alert('Something went wrong. Please try again.'); btn.disabled = false; btn.textContent = 'Continue to payment →'; }
       } catch (err) { alert('Connection error. Please try again.'); btn.disabled = false; btn.textContent = 'Continue to payment →'; }
+    });
+
+    // Voice Preview Logic
+    const playBtn = document.getElementById('playVoiceBtn');
+    const voiceSelect = document.getElementById('voiceSelect');
+
+    playBtn.addEventListener('click', () => {
+      const voiceId = voiceSelect.value;
+      let text = "Hi, I am your brand's AI assistant.";
+      let pitch = 1;
+      
+      if (voiceId === 'nova') {
+        text = "Hello there. I am Nova, your designated professional AI assistant. I'm ready to handle calls for your business.";
+        pitch = 1.1;
+      } else if (voiceId === 'echo') {
+        text = "Hey! I'm Echo. I'm a friendly, upbeat assistant ready to chat with your customers.";
+        pitch = 0.9;
+      } else if (voiceId === 'shimmer') {
+        text = "Hi, I'm Shimmer. I provide a warm and welcoming voice experience for every caller.";
+        pitch = 1.2;
+      } else if (voiceId === 'onyx') {
+        text = "Greetings. I am Onyx. I speak with a deep, authoritative, and calm tone.";
+        pitch = 0.5;
+      }
+
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.pitch = pitch;
+      
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        if (voiceId === 'nova' || voiceId === 'shimmer') {
+          utterance.voice = voices.find(v => v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Samantha') || v.name.includes('Karen')) || voices[0];
+        } else {
+          utterance.voice = voices.find(v => v.name.includes('Male') || v.name.includes('David') || v.name.includes('Alex') || v.name.includes('Daniel')) || voices[1] || voices[0];
+        }
+      }
+      
+      window.speechSynthesis.speak(utterance);
     });
   </script>
 </body>
