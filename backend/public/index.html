@@ -219,6 +219,17 @@
     .feature-card p { color: var(--text-muted); font-size: 1rem; line-height: 1.6; }
 
     /* ── Pricing ── */
+    .pricing-toggle-container { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 48px; }
+    .toggle-label { font-size: 1.1rem; font-weight: 600; color: var(--text-muted); transition: color 0.3s; }
+    .toggle-label.active { color: var(--text); }
+    .save-badge { background: rgba(0,255,136,0.15); color: var(--accent); padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; margin-left: 8px; border: 1px solid var(--border-glow); }
+    .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--surface); border: 2px solid var(--border); transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 4px; bottom: 4px; background-color: var(--text-muted); transition: .4s; border-radius: 50%; }
+    input:checked + .slider { border-color: var(--accent); }
+    input:checked + .slider:before { transform: translateX(26px); background-color: var(--accent); }
+
     .pricing-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -357,11 +368,20 @@
       <h2>Simple, transparent pricing.</h2>
       <p>No hidden fees. Cancel anytime. Stop losing midnight customers.</p>
     </div>
+    <div class="pricing-toggle-container reveal">
+      <span class="toggle-label active" id="label-monthly">Monthly</span>
+      <label class="switch">
+        <input type="checkbox" id="billingToggle">
+        <span class="slider"></span>
+      </label>
+      <span class="toggle-label" id="label-annual">Annually <span class="save-badge">Save 20%</span></span>
+    </div>
+    
     <div class="pricing-grid">
       <!-- Starter -->
       <div class="pricing-card glass reveal">
         <div class="price-name">Automated Lead Gen</div>
-        <div class="price">$149<span>/mo</span></div>
+        <div class="price" id="price-starter" data-monthly="149" data-annual="119">$149<span>/mo</span></div>
         <div class="pricing-desc">Perfect for local businesses wanting 24/7 coverage.</div>
         <ul class="features-list">
           <li><i>✓</i> Advanced AI Text Chatbot</li>
@@ -370,13 +390,13 @@
           <li><i>✓</i> Private Lead Dashboard</li>
           <li><i>✓</i> Instant Email Notifications</li>
         </ul>
-        <a href="/onboard.html" class="btn-block btn-outline">Start capturing leads</a>
+        <a href="/onboard.html?plan=starter&billing=monthly" id="btn-starter" class="btn-block btn-outline">Start capturing leads</a>
       </div>
       
       <!-- Pro -->
       <div class="pricing-card glass pro reveal" style="transition-delay: 0.1s;">
         <div class="price-name">Voice AI + Concierge</div>
-        <div class="price">$399<span>/mo</span></div>
+        <div class="price" id="price-pro" data-monthly="399" data-annual="319">$399<span>/mo</span></div>
         <div class="pricing-desc">The ultimate hands-off customer experience.</div>
         <ul class="features-list">
           <li><i>✓</i> <strong>Everything in Lead Gen</strong></li>
@@ -385,7 +405,7 @@
           <li><i>✓</i> Direct Calendar Routing</li>
           <li><i>✓</i> Priority System Resources</li>
         </ul>
-        <a href="/onboard.html" class="btn-block btn-accent">Upgrade to Premium Voice</a>
+        <a href="/onboard.html?plan=pro&billing=monthly" id="btn-pro" class="btn-block btn-accent">Upgrade to Premium Voice</a>
       </div>
     </div>
   </section>
@@ -411,6 +431,34 @@
     };
     const observer = new IntersectionObserver(callback, { root: null, margin: '0px', threshold: 0.15 });
     reveals.forEach(el => observer.observe(el));
+
+    // Billing Toggle Logic
+    const toggle = document.getElementById('billingToggle');
+    const priceStarter = document.getElementById('price-starter');
+    const pricePro = document.getElementById('price-pro');
+    const btnStarter = document.getElementById('btn-starter');
+    const btnPro = document.getElementById('btn-pro');
+    const labelMonthly = document.getElementById('label-monthly');
+    const labelAnnual = document.getElementById('label-annual');
+
+    toggle.addEventListener('change', () => {
+      const isAnnual = toggle.checked;
+      const billing = isAnnual ? 'annual' : 'monthly';
+      
+      if(isAnnual) {
+        labelMonthly.classList.remove('active');
+        labelAnnual.classList.add('active');
+      } else {
+        labelMonthly.classList.add('active');
+        labelAnnual.classList.remove('active');
+      }
+
+      priceStarter.innerHTML = '$' + priceStarter.getAttribute(isAnnual ? 'data-annual' : 'data-monthly') + '<span>/mo</span>';
+      pricePro.innerHTML = '$' + pricePro.getAttribute(isAnnual ? 'data-annual' : 'data-monthly') + '<span>/mo</span>';
+      
+      btnStarter.href = '/onboard.html?plan=starter&billing=' + billing;
+      btnPro.href = '/onboard.html?plan=pro&billing=' + billing;
+    });
   </script>
 
 </body>

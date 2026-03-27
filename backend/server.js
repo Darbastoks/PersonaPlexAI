@@ -738,15 +738,38 @@ app.post('/api/onboard', async (req, res) => {
     fs.writeFileSync(onboardingFile, JSON.stringify(submissions, null, 2));
     console.log(`📋 New intake form: ${data.businessName} (${data.industry})`);
 
-    const priceId = data.plan === 'pro'
-      ? (process.env.STRIPE_PRICE_PRO || 'price_1TF9P5ItaqAtbYiGYIuZRQUV')
-      : (process.env.STRIPE_PRICE_STARTER || 'price_1TF9NKItaqAtbYiGpOIXLjG2');
+    let unitAmount = 14900;
+    let productName = 'Automated Lead Gen (Monthly)';
+    let interval = 'month';
+
+    if (data.plan === 'starter' && data.billing === 'annual') { 
+      unitAmount = 142800; // $119/mo paid annually
+      productName = 'Automated Lead Gen (Annual)'; 
+      interval = 'year'; 
+    }
+    if (data.plan === 'pro' && data.billing === 'monthly') { 
+      unitAmount = 39900; 
+      productName = 'Voice AI + Concierge (Monthly)'; 
+    }
+    if (data.plan === 'pro' && data.billing === 'annual') { 
+      unitAmount = 382800; // $319/mo paid annually
+      productName = 'Voice AI + Concierge (Annual)'; 
+      interval = 'year'; 
+    }
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
       customer_email: data.email,
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: { name: productName },
+          recurring: { interval: interval },
+          unit_amount: unitAmount,
+        },
+        quantity: 1
+      }],
       success_url: `${req.headers.origin || 'https://chatvora.onrender.com'}/success.html`,
       cancel_url: `${req.headers.origin || 'https://chatvora.onrender.com'}/onboard.html`,
       metadata: {

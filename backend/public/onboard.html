@@ -76,13 +76,13 @@
         <div class="plan-selector">
           <div class="plan-option active" onclick="selectPlan(this, 'starter')" data-plan="starter" id="plan-starter">
             <h3>Automated Lead Gen</h3>
-            <div class="price">$149<span class="period">/mo</span></div>
+            <div class="price" id="price-starter-val">$149<span class="period">/mo</span></div>
             <div class="desc">Unlimited Text AI · Lead Dashboard</div>
           </div>
           <div class="plan-option" onclick="selectPlan(this, 'pro')" data-plan="pro" id="plan-pro">
             <span class="popular">POPULAR</span>
             <h3>Voice AI + Concierge</h3>
-            <div class="price">$399<span class="period">/mo</span></div>
+            <div class="price" id="price-pro-val">$399<span class="period">/mo</span></div>
             <div class="desc">Text & Voice AI · Direct Calling</div>
           </div>
         </div>
@@ -163,9 +163,16 @@
 
   <script>
     let selectedPlan = 'starter';
+    const urlParams = new URLSearchParams(window.location.search);
+    const billingPref = urlParams.get('billing') || 'monthly';
+
+    // Update UI if Annual was selected
+    if (billingPref === 'annual') {
+      document.getElementById('price-starter-val').innerHTML = '$119<span class="period">/mo</span><div style="font-size:10px; font-weight: normal; margin-top:-4px;">Billed $1428 annually</div>';
+      document.getElementById('price-pro-val').innerHTML = '$319<span class="period">/mo</span><div style="font-size:10px; font-weight: normal; margin-top:-4px;">Billed $3828 annually</div>';
+    }
 
     // Auto-select plan from URL param
-    const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('plan') === 'pro') {
       selectedPlan = 'pro';
       document.getElementById('plan-starter').classList.remove('active');
@@ -186,6 +193,7 @@
       const formData = new FormData(e.target);
       const data = Object.fromEntries(formData.entries());
       data.plan = selectedPlan;
+      data.billing = billingPref;
       try {
         const resp = await fetch('/api/onboard', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         const result = await resp.json();
