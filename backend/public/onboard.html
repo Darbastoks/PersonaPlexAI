@@ -137,22 +137,23 @@
 
         <div class="form-group">
           <label>Key Services (what does your business offer?)</label>
-          <input type="text" name="services" placeholder="Teeth Cleaning, Whitening, Root Canal">
+          <input type="text" id="servicesField" name="services" placeholder="Teeth Cleaning, Whitening, Root Canal">
         </div>
 
         <div class="form-group">
           <label>Pricing / Rates (optional — helps AI answer price questions)</label>
-          <textarea name="pricing" placeholder="Cleaning: $150, Whitening: $300, Consultation: Free" rows="2"></textarea>
+          <textarea id="pricingField" name="pricing" placeholder="Cleaning: $150, Whitening: $300, Consultation: Free" rows="2"></textarea>
         </div>
 
-        <div class="form-group">
-          <label>Booking / Scheduling Link</label>
-          <input type="url" name="bookingLink" placeholder="https://calendly.com/your-business">
+        <!-- Tier Specific: Growth & Elite -->
+        <div class="form-group tier-field growth-elite-only" style="display: none;">
+          <label>Booking / Scheduling Link (Growth & Elite Feature)</label>
+          <input type="url" id="bookingLink" name="bookingLink" placeholder="https://calendly.com/your-business">
         </div>
 
         <div class="form-group">
           <label>Frequently Asked Questions (one per line)</label>
-          <textarea name="faq" placeholder="Do you take insurance? Yes, we accept most major insurance.&#10;Is parking available? Yes, free parking in our lot." rows="3"></textarea>
+          <textarea id="faqField" name="faq" placeholder="Do you take insurance? Yes, we accept most major insurance.&#10;Is parking available? Yes, free parking in our lot." rows="3"></textarea>
         </div>
 
         <!-- Tier Specific: Growth & Elite -->
@@ -213,6 +214,62 @@
       document.getElementById('plan-' + preplan).classList.add('active');
     }
     updateFormLogic(selectedPlan);
+
+    const placeholders = {
+      "Dental / Healthcare": {
+        s: "Teeth Cleaning, Whitening, Root Canal, Invisalign",
+        p: "Cleaning: $150, Whitening: $300, Consultation: Free",
+        f: "Do you take insurance? Yes, we accept Delta.\nIs parking available? Yes, free back lot parking.",
+      },
+      "Legal / Law Firm": {
+        s: "Personal Injury, Family Law, Estate Planning, DUI Defense",
+        p: "Initial Consultation: Free, Hourly: $250/hr",
+        f: "Do I pay if we lose? No, we work on contingency.\nHow long will my case take? 3-6 months.",
+      },
+      "Real Estate": {
+        s: "Residential Buying/Selling, Commercial Leasing, Property Management",
+        p: "Commission: 3%, Valuation: Free, Management: 8%",
+        f: "Are you available for weekend showings? Yes, Saturday 10-4.\nHow fast can you sell? Avg 21 days.",
+      },
+      "Beauty / Salon": {
+        s: "Men's Haircut, Balayage, Manicure, Massage",
+        p: "Haircut: $40, Balayage: $150+, Manicure: $35",
+        f: "Do I need an appointment? Walk-ins welcome, but appointments hold priority.",
+      },
+      "HVAC / Home Services": {
+        s: "AC Repair, Furnace Install, Plumbing, Drain Cleaning",
+        p: "Service Call: $89, AC Tune-Up: $120",
+        f: "Emergency 24/7 service? Yes, call our emergency line.\nAre techs licensed? Yes, fully licensed.",
+      },
+      "Restaurant / Food": {
+        s: "Dine-In, Takeaway, Private Catering",
+        p: "Appetizers: $8-15, Entrees: $18-35",
+        f: "Do you have vegan options? Yes, dedicated GF/Vegan menu.\nCan I reserve a table for 10? Yes.",
+      },
+      "Fitness / Gym": {
+        s: "Personal Training, Group Classes, 24/7 Access",
+        p: "Basic: $30/mo, VIP: $80/mo, Day Pass: $15",
+        f: "Cancel anytime? Yes, with 30 days notice.\nDo you have showers? Yes, full locker rooms.",
+      },
+      "Automotive": {
+        s: "Oil Change, Brakes, Engine Diagnostics",
+        p: "Synthetic Oil: $65, Brake Pads: $150, Diag: $99",
+        f: "Provide a loaner car? Yes, for repairs > 4 hrs.\nFix body damage? No, mechanical only.",
+      }
+    };
+
+    document.querySelector('select[name="industry"]').addEventListener('change', (e) => {
+      const val = e.target.value;
+      if (placeholders[val]) {
+        document.getElementById('servicesField').placeholder = placeholders[val].s;
+        document.getElementById('pricingField').placeholder = placeholders[val].p;
+        document.getElementById('faqField').placeholder = placeholders[val].f;
+      } else {
+        document.getElementById('servicesField').placeholder = "Your top 3 services...";
+        document.getElementById('pricingField').placeholder = "Common prices...";
+        document.getElementById('faqField').placeholder = "Common question? Answer it here.";
+      }
+    });
 
     function selectPlan(el, plan) {
       document.querySelectorAll('.plan-option').forEach(p => p.classList.remove('active'));
