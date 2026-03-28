@@ -252,7 +252,7 @@ async function generateTTS(text, voiceId = 'nova') {
     'echo': 'aura-arcas-en',     // Calm/Professional Male
     'onyx': 'aura-perseus-en'    // Deep/Authoritative Male
   };
-  const model = voiceMap[voiceId] || 'aura-asteria-en';
+  const model = voiceMap[voiceId] || 'aura-stella-en';
 
   const payload = JSON.stringify({ text });
 
