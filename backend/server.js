@@ -500,8 +500,14 @@ app.get('/api/leads', async (req, res) => {
 // ── Demo Chat (Custom System Prompt for Demo Page) ──────────────
 app.post('/api/demo-chat', async (req, res) => {
   try {
-    const { message, systemPrompt, history = [] } = req.body;
+    const { message, systemPrompt, history = [], googleId } = req.body;
     if (!message) return res.status(400).json({ error: 'No message' });
+    
+    // Security Gate: Ensure a verified identity is present
+    if (!googleId || googleId.length < 5) {
+      console.warn('⚠️ Demo chat attempted without googleId');
+      return res.status(401).json({ error: 'Authentication required to use the demo' });
+    }
     if (!GROQ_API_KEY || GROQ_API_KEY.length < 10) {
       console.error('Demo chat: GROQ_API_KEY missing or too short');
       return res.status(500).json({ error: 'AI not configured' });

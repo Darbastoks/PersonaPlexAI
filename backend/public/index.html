@@ -326,7 +326,7 @@
       <a href="#features">Features</a>
       <a href="/demo.html">Demo</a>
       <a href="#pricing">Pricing</a>
-      <a href="/leads.html" style="border: 1px solid var(--border); padding: 8px 20px; border-radius: 99px;">Login</a>
+      <a href="javascript:void(0)" onclick="handleNavLogin()" id="navLoginBtn" style="border: 1px solid var(--border); padding: 8px 20px; border-radius: 99px;">Login</a>
       <a href="/onboard.html" class="btn-nav">Get Started</a>
     </div>
   </nav>
@@ -459,26 +459,9 @@
   </div>
 
   <script>
-    // Google Auth Handler
-    async function handleCredentialResponse(response) {
-      try {
-        const res = await fetch('/api/auth/google', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ credential: response.credential })
-        });
-        const data = await res.json();
-        if (data.success) {
-          localStorage.setItem('cv_user', JSON.stringify(data.user));
-          // Optional: Show subtle welcome message
-        }
-      } catch (e) {
-        console.error("Auth failed", e);
-      }
-    }
-
+    // ── Intersection Observer (Scroll Reveal) ─────────────────────
     const reveals = document.querySelectorAll('.reveal');
-    const callback = (entries, observer) => {
+    const revealCallback = (entries, observer) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.classList.add('active');
@@ -486,10 +469,10 @@
         }
       });
     };
-    const observer = new IntersectionObserver(callback, { root: null, margin: '0px', threshold: 0.15 });
-    reveals.forEach(el => observer.observe(el));
+    const revealObserver = new IntersectionObserver(revealCallback, { threshold: 0.1 });
+    reveals.forEach(el => revealObserver.observe(el));
 
-    // Billing Toggle Logic
+    // ── Billing & Pricing Toggle ──────────────────────────────────
     const toggle = document.getElementById('billingToggle');
     const priceStarter = document.getElementById('price-starter');
     const priceGrowth = document.getElementById('price-growth');
@@ -499,6 +482,20 @@
     const btnElite = document.getElementById('btn-elite');
     const labelMonthly = document.getElementById('label-monthly');
     const labelAnnual = document.getElementById('label-annual');
+
+    function animateValue(obj, start, end, duration, prefix = '', suffix = '') {
+      let startTimestamp = null;
+      const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        const easeOutQuad = progress * (2 - progress);
+        const current = Math.floor(easeOutQuad * (end - start) + start);
+        obj.innerHTML = prefix + '$' + current + suffix;
+        if (progress < 1) window.requestAnimationFrame(step);
+        else obj.innerHTML = prefix + '$' + end + suffix;
+      };
+      window.requestAnimationFrame(step);
+    }
 
     toggle.addEventListener('change', () => {
       const isAnnual = toggle.checked;
@@ -511,50 +508,75 @@
       const eM = parseInt(priceElite.getAttribute('data-monthly'));
       const eA = parseInt(priceElite.getAttribute('data-annual'));
 
-      function animateValue(obj, start, end, duration, prefix = '', suffix = '') {
-        let startTimestamp = null;
-        const step = (timestamp) => {
-          if (!startTimestamp) startTimestamp = timestamp;
-          const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-          const easeOutQuad = progress * (2 - progress);
-          const current = Math.floor(easeOutQuad * (end - start) + start);
-          obj.innerHTML = prefix + '$' + current + suffix;
-          if (progress < 1) window.requestAnimationFrame(step);
-          else obj.innerHTML = prefix + '$' + end + suffix;
-        };
-        window.requestAnimationFrame(step);
-      }
-      
-      if(isAnnual) {
+      if (isAnnual) {
         labelMonthly.classList.remove('active');
         labelAnnual.classList.add('active');
+        const pS = `<span style="color:rgba(255,255,255,0.4);text-decoration:line-through;font-size:0.55em;margin-right:10px;vertical-align:middle;">$${sM}</span>`;
+        const pG = `<span style="color:rgba(255,255,255,0.4);text-decoration:line-through;font-size:0.55em;margin-right:10px;vertical-align:middle;">$${gM}</span>`;
+        const pE = `<span style="color:rgba(255,255,255,0.4);text-decoration:line-through;font-size:0.55em;margin-right:10px;vertical-align:middle;">$${eM}</span>`;
         
-        const prefixS = '<span style="color:rgba(255,255,255,0.4);text-decoration:line-through;font-size:0.55em;margin-right:10px;vertical-align:middle;">$' + sM + '</span>';
-        const prefixG = '<span style="color:rgba(255,255,255,0.4);text-decoration:line-through;font-size:0.55em;margin-right:10px;vertical-align:middle;">$' + gM + '</span>';
-        const prefixE = '<span style="color:rgba(255,255,255,0.4);text-decoration:line-through;font-size:0.55em;margin-right:10px;vertical-align:middle;">$' + eM + '</span>';
-        
-        animateValue(priceStarter, sM, sA, 600, prefixS, '<span>/mo</span>');
-        animateValue(priceGrowth, gM, gA, 600, prefixG, '<span>/mo</span>');
-        animateValue(priceElite, eM, eA, 600, prefixE, '<span>/mo</span>');
-        
-        priceStarter.style.color = 'var(--accent, #00d47e)';
-        priceGrowth.style.color = 'var(--accent, #00d47e)';
-        priceElite.style.color = 'var(--accent, #00d47e)';
-        setTimeout(() => { priceStarter.style.color = ''; priceGrowth.style.color = ''; priceElite.style.color = ''; }, 600);
+        animateValue(priceStarter, sM, sA, 600, pS, '<span>/mo</span>');
+        animateValue(priceGrowth, gM, gA, 600, pG, '<span>/mo</span>');
+        animateValue(priceElite, eM, eA, 600, pE, '<span>/mo</span>');
       } else {
         labelMonthly.classList.add('active');
         labelAnnual.classList.remove('active');
-        
         animateValue(priceStarter, sA, sM, 400, '', '<span>/mo</span>');
         animateValue(priceGrowth, gA, gM, 400, '', '<span>/mo</span>');
         animateValue(priceElite, eA, eM, 400, '', '<span>/mo</span>');
       }
       
-      btnStarter.href = '/onboard.html?plan=starter&billing=' + billing;
-      btnGrowth.href = '/onboard.html?plan=growth&billing=' + billing;
-      btnElite.href = '/onboard.html?plan=elite&billing=' + billing;
+      btnStarter.href = `/onboard.html?plan=starter&billing=${billing}`;
+      btnGrowth.href = `/onboard.html?plan=growth&billing=${billing}`;
+      btnElite.href = `/onboard.html?plan=elite&billing=${billing}`;
     });
+
+    // ── Unified Authentication Logic ──────────────────────────────
+    function handleNavLogin() {
+      const user = localStorage.getItem('cv_user');
+      if (user) {
+        window.location.href = '/leads.html';
+      } else {
+        google.accounts.id.prompt(); // Trigger One-Tap directly
+      }
+    }
+
+    async function handleCredentialResponse(response) {
+      try {
+        const res = await fetch('/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential: response.credential })
+        });
+        const data = await res.json();
+        if (data.success) {
+          localStorage.setItem('cv_user', JSON.stringify(data.user));
+          // Route correctly based on where they are or want to go
+          if (window.location.pathname.includes('demo')) {
+             if(document.getElementById('demoLock')) document.getElementById('demoLock').classList.add('hidden');
+          } else {
+             window.location.href = '/leads.html';
+          }
+        }
+      } catch (e) {
+        console.error("Auth failed", e);
+      }
+    }
+
+    window.onload = function () {
+      google.accounts.id.initialize({
+        client_id: "537067514317-g1bock92q87m1pjljp0vqnclgob2mpq4.apps.googleusercontent.com",
+        callback: handleCredentialResponse
+      });
+      // Silent prompt if not logged in
+      if (!localStorage.getItem('cv_user')) {
+        google.accounts.id.prompt();
+      }
+    };
   </script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</body>
+</html>
 
 </body>
 </html>
