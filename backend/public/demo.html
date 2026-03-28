@@ -106,8 +106,19 @@
     .play-sample { 
       background: none; border: none; color: var(--text-secondary); cursor: pointer; 
       font-size: 0.9rem; padding: 4px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; position: relative;
     }
     .play-sample:hover { color: var(--green); background: var(--green-dim); }
+    .play-sample.playing { color: var(--green); }
+    .play-sample.playing::after {
+      content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
+      border: 1px solid var(--green); border-radius: 50%;
+      animation: pulse-ring 1.5s infinite;
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 1; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
 
     /* ── Responsive ────── */
     @media (max-width: 768px) {
@@ -275,13 +286,47 @@
     }
 
     let currentPreview = null;
+    let currentPreviewId = null;
+
     function playLocalSample(voiceId) {
-      if (currentPreview) {
+      const btn = event.currentTarget;
+      
+      if (currentPreview && currentPreviewId === voiceId) {
+        // Toggle Stop
         currentPreview.pause();
         currentPreview.currentTime = 0;
+        currentPreview = null;
+        currentPreviewId = null;
+        btn.innerHTML = '▶';
+        btn.classList.remove('playing');
+        return;
       }
+
+      // Stop any other preview
+      if (currentPreview) {
+        currentPreview.pause();
+        document.querySelectorAll('.play-sample').forEach(b => {
+          b.innerHTML = '▶';
+          b.classList.remove('playing');
+        });
+      }
+
+      btn.innerHTML = '■';
+      btn.classList.add('playing');
+      
       currentPreview = new Audio(`/audio/${voiceId}.mp3`);
-      currentPreview.play().catch(e => console.error("Preview failed:", e));
+      currentPreviewId = voiceId;
+      currentPreview.onended = () => {
+        btn.innerHTML = '▶';
+        btn.classList.remove('playing');
+        currentPreview = null;
+        currentPreviewId = null;
+      };
+      currentPreview.play().catch(e => {
+        console.error("Preview failed:", e);
+        btn.innerHTML = '▶';
+        btn.classList.remove('playing');
+      });
     }
 
     function addMessage(text, type) {
