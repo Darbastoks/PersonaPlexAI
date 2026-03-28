@@ -247,9 +247,9 @@ async function generateTTS(text, voiceId = 'nova') {
 
   // Map our personas to Deepgram Aura models
   const voiceMap = {
-    'nova': 'aura-asteria-en',    // Happy/Cheerful Female
+    'nova': 'aura-stella-en',    // Bright/Cheerful Female
     'shimmer': 'aura-luna-en',   // Warm/Polished Female
-    'echo': 'aura-orion-en',     // Friendly/Efficient Male
+    'echo': 'aura-arcas-en',     // Calm/Professional Male
     'onyx': 'aura-perseus-en'    // Deep/Authoritative Male
   };
   const model = voiceMap[voiceId] || 'aura-asteria-en';
