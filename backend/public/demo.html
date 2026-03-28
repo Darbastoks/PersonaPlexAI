@@ -349,6 +349,11 @@
     </div>
   </section>
 
+  <!-- Footer -->
+  <footer style="padding: 40px; border-top: 1px solid var(--border); background: var(--bg); text-align: center; font-size: 0.85rem; color: var(--text-muted);">
+    <p>&copy; 2026 ChatVora. All rights reserved. <a href="/privacy.html" style="color:var(--text-muted); text-decoration:none; margin-left:12px;">Privacy Policy</a></p>
+  </footer>
+
   <script>
     const industries = {
       dental: { name: 'Bright Smile Dental', icon: '🦷', greeting: "Hi! Welcome to Bright Smile Dental. I can answer questions about our services, pricing, or hours. How can I help you?", systemPrompt: "You are the AI chatbot for Bright Smile Dental. Services: cleanings ($120), fillings ($200-350), whitening ($400), root canal ($800-1200), crowns ($1000-1500). Hours: Mon-Fri 8AM-6PM, Sat 9AM-2PM. Address: 123 Main St. Accept most insurance. Be friendly and concise. Keep responses under 2 sentences." },
@@ -599,7 +604,6 @@
 
     // Init
     addMessage(industries.dental.greeting, 'bot');
-    updateRecommendations('shimmer');
     selectVoice('shimmer');
   </script>
 </body>
