@@ -110,15 +110,6 @@
     }
     .play-sample:hover { color: var(--green); background: var(--green-dim); }
     .play-sample.playing { color: var(--green); }
-    .play-sample.playing::after {
-      content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
-      border: 1px solid var(--green); border-radius: 50%;
-      animation: pulse-ring 1.5s infinite;
-    }
-    @keyframes pulse-ring {
-      0% { transform: scale(0.95); opacity: 1; }
-      100% { transform: scale(1.5); opacity: 0; }
-    }
 
     /* ── Responsive ────── */
     @media (max-width: 768px) {
