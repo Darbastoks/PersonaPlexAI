@@ -251,6 +251,18 @@
       border-color: var(--accent);
       box-shadow: 0 0 60px rgba(0, 255, 136, 0.1);
     }
+    .popular-tag {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: var(--accent);
+      color: #000;
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 999px;
+      letter-spacing: 1px;
+    }
     .pricing-card.pro::before {
       content: '';
       position: absolute;
@@ -385,27 +397,28 @@
     <div class="pricing-grid">
       <!-- Starter -->
       <div class="pricing-card glass reveal">
-        <div class="price-name">Starter</div>
+        <div class="price-name">Essentials</div>
         <div class="price" id="price-starter" data-monthly="49" data-annual="39">$49<span>/mo</span></div>
-        <div class="pricing-desc">Perfect for testing the AI waters.</div>
+        <div class="pricing-desc">Automate your customer service instantly.</div>
         <ul class="features-list">
-          <li><i>✓</i> Fast Text AI Chatbot</li>
-          <li><i>✓</i> Easy Web Widget</li>
-          <li><i>✓</i> Custom Business Training</li>
+          <li><i>✓</i> 24/7 Hyper-Intelligent Text AI</li>
+          <li><i>✓</i> Custom Business Knowledge Base</li>
+          <li><i>✓</i> Premium Web Widget Integration</li>
         </ul>
         <a href="/onboard.html?plan=starter&billing=monthly" id="btn-starter" class="btn-block btn-outline">Get Starter</a>
       </div>
       
       <!-- Growth -->
       <div class="pricing-card glass pro reveal" style="transition-delay: 0.1s;">
+        <div class="popular-tag">MOST POPULAR</div>
         <div class="price-name">Growth</div>
         <div class="price" id="price-growth" data-monthly="99" data-annual="79">$99<span>/mo</span></div>
         <div class="pricing-desc">The ultimate hands-off lead capture machine.</div>
         <ul class="features-list">
-          <li><i>✓</i> <strong>Everything in Starter</strong></li>
-          <li><i>✓</i> Automatic Lead Capture</li>
-          <li><i>✓</i> Private Lead Dashboard</li>
-          <li><i>✓</i> Instant Email Notifications</li>
+          <li><i>✓</i> <strong>Everything in Essentials</strong></li>
+          <li><i>✓</i> Automatic Lead Capture Flow</li>
+          <li><i>✓</i> Private Real-time Lead CRM</li>
+          <li><i>✓</i> Instant SMS/Email Notifications</li>
         </ul>
         <a href="/onboard.html?plan=growth&billing=monthly" id="btn-growth" class="btn-block btn-accent">Upgrade to Growth</a>
       </div>
