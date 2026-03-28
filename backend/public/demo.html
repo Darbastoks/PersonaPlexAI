@@ -86,50 +86,80 @@
     .mic-btn.recording { background: var(--red-dim); border-color: var(--red); animation: pulse-mic 1s infinite; }
     @keyframes pulse-mic { 0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); } 50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } }
 
-    .voice-selection { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
-    .voice-selection h2 { font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; }
-    
-    .voice-dropdown { 
-      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); 
-      position: relative; cursor: pointer;
+    /* ── Voice Personality Selector (Uiverse Inspired) ── */
+    .voice-selection { margin-top: auto; padding-top: 24px; border-top: 1px solid var(--border); }
+    .voice-selection h2 { font-size: 0.85rem; font-weight: 600; margin-bottom: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .dropdown {
+      border: 1px solid var(--border); border-radius: var(--radius);
+      transition: all 400ms cubic-bezier(0.23, 1, 0.32, 1);
+      display: flex; flex-direction: column; min-height: 52px;
+      background-color: var(--surface); overflow: hidden;
+      position: relative; width: 100%;
     }
-    .voice-header { padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; }
-    .voice-header:hover { background: #1a1a1a; }
-    .voice-header-right { display: flex; align-items: center; gap: 12px; }
-    .chevron { font-size: 0.7rem; color: var(--text-muted); transition: transform 0.2s; }
-    .voice-dropdown.open .chevron { transform: rotate(180deg); }
-    
-    .voice-options { 
-      display: none; border-top: 1px solid var(--border); background: #0c0c0c;
-      border-bottom-left-radius: var(--radius-sm); border-bottom-right-radius: var(--radius-sm);
+    .dropdown input:where(:checked) ~ .list {
+      opacity: 1; transform: translateY(-2rem) scale(1);
+      transition: all 500ms ease; margin-top: 24px;
+      padding-top: 4px; margin-bottom: -24px;
     }
-    .voice-dropdown.open .voice-options { display: block; }
-    
-    .voice-item { 
-      padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; 
-      transition: all 0.2s; border-bottom: 1px solid var(--border);
+    .dropdown input:where(:not(:checked)) ~ .list {
+      opacity: 0; transform: translateY(3rem);
+      margin-top: -100%; user-select: none;
+      height: 0px; max-height: 0px; min-height: 0px;
+      pointer-events: none; transition: all 500ms ease-out;
     }
-    .voice-item:last-child { border-bottom: none; }
-    .voice-item:hover { background: #1a1a1a; }
-    .voice-item.active { background: var(--green-dim); }
-    
-    .voice-info { display: flex; align-items: center; gap: 10px; }
-    .voice-name { font-size: 0.85rem; font-weight: 600; }
-    .voice-meta { font-size: 0.7rem; color: var(--text-muted); }
-    .voice-badge { 
-      font-size: 0.6rem; font-weight: 800; color: #000; background: var(--green); 
-      padding: 2px 6px; border-radius: 4px; display: none; 
+    .trigger {
+      cursor: pointer; list-style: none; user-select: none;
+      font-weight: 600; color: inherit; width: 100%;
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px; height: 52px; position: relative;
+      z-index: 99; border-radius: inherit; background-color: var(--surface);
     }
-    .voice-item.recommended .voice-badge,
-    .voice-dropdown.recommended-active .voice-header .voice-badge { display: block; }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;
+    }
+    .dropdown input:where(:checked) + .trigger { margin-bottom: 0.5rem; }
+    .dropdown input:where(:checked) + .trigger:before { transform: rotate(90deg); }
+    
+    .trigger:before {
+      content: "›"; transform: rotate(0deg);
+      width: 17px; height: 17px; color: var(--green);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; transition: all 350ms ease;
+    }
+    .trigger .selected-info { flex: 1; display: flex; align-items: center; justify-content: space-between; }
+    .trigger .voice-badge { display: none; margin-left: auto; margin-right: 8px; }
+    .dropdown.recommended-active .trigger .voice-badge { display: block; }
+
+    .list {
+      height: 100%; max-height: 25rem; width: 100%;
+      display: flex; flex-direction: column;
+      overflow-y: auto; gap: 8px; padding: 0 12px 12px 12px;
+    }
+    .listitem { list-style: none; width: 100%; }
+    .voice-article {
+      padding: 12px; border-radius: var(--radius-sm);
+      font-size: 0.85rem; font-weight: 500; width: 100%;
+      border: 1px solid var(--border); display: flex;
+      align-items: center; justify-content: space-between;
+      background-color: var(--surface-2); transition: all 0.2s; cursor: pointer;
+    }
+    .voice-article:hover { border-color: #333; background: #222; }
+    .voice-article.active { border-color: var(--green); background: var(--green-dim); }
+    .voice-article.recommended .voice-badge { display: block; }
 
     .play-sample { 
       background: none; border: none; color: var(--text-secondary); cursor: pointer; 
-      font-size: 0.9rem; padding: 4px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      transition: all 0.2s; position: relative;
+      font-size: 0.9rem; padding: 4px; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
     }
-    .play-sample:hover { color: var(--green); }
-    .play-sample.playing { color: var(--green); }
+    .play-sample:hover, .play-sample.playing { color: var(--green); }
+
+    .webkit-scrollbar::-webkit-scrollbar { width: 4px; }
+    .webkit-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .webkit-scrollbar::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+    .webkit-scrollbar:hover::-webkit-scrollbar-thumb { background: var(--border); }
 
     /* ── Responsive ────── */
     @media (max-width: 768px) {
@@ -163,62 +193,71 @@
 
       <div class="voice-selection">
         <h2>Voice Personality</h2>
-        <div class="voice-dropdown" id="voiceDropdown">
-          <div class="voice-header" onclick="toggleVoiceDropdown()">
-            <div class="voice-info">
-              <button class="play-sample" id="header-play" onclick="event.stopPropagation(); playLocalSample(selectedVoice, true)" title="Play Sample">▶</button>
-              <div>
-                <div class="voice-name" id="selected-voice-name">Nova</div>
-                <div class="voice-meta" id="selected-voice-meta">Cheerful & Energetic</div>
-              </div>
-            </div>
-            <div class="voice-header-right">
-              <div class="voice-badge">RECOMMENDED</div>
-              <span class="chevron">▼</span>
-            </div>
-          </div>
-          <div class="voice-options">
-            <div class="voice-item" id="v-nova" onclick="selectVoice('nova')">
+        <div class="dropdown" id="voiceDropdown">
+          <input hidden="" class="sr-only" name="state-dropdown" id="state-dropdown" type="checkbox" />
+          <label for="state-dropdown" class="trigger">
+            <div class="selected-info">
               <div class="voice-info">
-                <button class="play-sample" onclick="event.stopPropagation(); playLocalSample('nova')" title="Play Sample">▶</button>
+                <button class="play-sample" id="header-play" onclick="event.stopPropagation(); playLocalSample(selectedVoice, true)" title="Play Sample">▶</button>
                 <div>
-                  <div class="voice-name">Nova</div>
-                  <div class="voice-meta">Cheerful & Energetic</div>
+                  <div class="voice-name" id="selected-voice-name">Nova</div>
+                  <div class="voice-meta" id="selected-voice-meta">Cheerful & Energetic</div>
                 </div>
               </div>
               <div class="voice-badge">RECOMMENDED</div>
             </div>
-            <div class="voice-item" id="v-shimmer" onclick="selectVoice('shimmer')">
-              <div class="voice-info">
-                <button class="play-sample" onclick="event.stopPropagation(); playLocalSample('shimmer')" title="Play Sample">▶</button>
-                <div>
-                  <div class="voice-name">Shimmer</div>
-                  <div class="voice-meta">Warm & Welcoming</div>
+          </label>
+
+          <ul class="list webkit-scrollbar" role="list">
+            <li class="listitem" id="v-nova" onclick="selectVoice('nova')">
+              <div class="voice-article">
+                <div class="voice-info">
+                  <button class="play-sample" onclick="event.stopPropagation(); playLocalSample('nova')" title="Play Sample">▶</button>
+                  <div>
+                    <div class="voice-name">Nova</div>
+                    <div class="voice-meta">Cheerful & Energetic</div>
+                  </div>
                 </div>
+                <div class="voice-badge">RECOMMENDED</div>
               </div>
-              <div class="voice-badge">RECOMMENDED</div>
-            </div>
-            <div class="voice-item" id="v-echo" onclick="selectVoice('echo')">
-              <div class="voice-info">
-                <button class="play-sample" onclick="event.stopPropagation(); playLocalSample('echo')" title="Play Sample">▶</button>
-                <div>
-                  <div class="voice-name">Echo</div>
-                  <div class="voice-meta">Friendly & Professional</div>
+            </li>
+            <li class="listitem" id="v-shimmer" onclick="selectVoice('shimmer')">
+              <div class="voice-article">
+                <div class="voice-info">
+                  <button class="play-sample" onclick="event.stopPropagation(); playLocalSample('shimmer')" title="Play Sample">▶</button>
+                  <div>
+                    <div class="voice-name">Shimmer</div>
+                    <div class="voice-meta">Warm & Welcoming</div>
+                  </div>
                 </div>
+                <div class="voice-badge">RECOMMENDED</div>
               </div>
-              <div class="voice-badge">RECOMMENDED</div>
-            </div>
-            <div class="voice-item" id="v-onyx" onclick="selectVoice('onyx')">
-              <div class="voice-info">
-                <button class="play-sample" onclick="event.stopPropagation(); playLocalSample('onyx')" title="Play Sample">▶</button>
-                <div>
-                  <div class="voice-name">Onyx</div>
-                  <div class="voice-meta">Deep & Authoritative</div>
+            </li>
+            <li class="listitem" id="v-echo" onclick="selectVoice('echo')">
+              <div class="voice-article">
+                <div class="voice-info">
+                  <button class="play-sample" onclick="event.stopPropagation(); playLocalSample('echo')" title="Play Sample">▶</button>
+                  <div>
+                    <div class="voice-name">Echo</div>
+                    <div class="voice-meta">Friendly & Professional</div>
+                  </div>
                 </div>
+                <div class="voice-badge">RECOMMENDED</div>
               </div>
-              <div class="voice-badge">RECOMMENDED</div>
-            </div>
-          </div>
+            </li>
+            <li class="listitem" id="v-onyx" onclick="selectVoice('onyx')">
+              <div class="voice-article">
+                <div class="voice-info">
+                  <button class="play-sample" onclick="event.stopPropagation(); playLocalSample('onyx')" title="Play Sample">▶</button>
+                  <div>
+                    <div class="voice-name">Onyx</div>
+                    <div class="voice-meta">Deep & Authoritative</div>
+                  </div>
+                </div>
+                <div class="voice-badge">RECOMMENDED</div>
+              </div>
+            </li>
+          </ul>
         </div>
       </div>
       <div class="sidebar-cta">
@@ -312,7 +351,8 @@
     }
 
     function toggleVoiceDropdown() {
-      document.getElementById('voiceDropdown').classList.toggle('open');
+      const cb = document.getElementById('state-dropdown');
+      cb.checked = !cb.checked;
     }
 
     function selectVoice(voiceId) {
@@ -331,11 +371,14 @@
       document.getElementById('selected-voice-meta').textContent = info.meta;
       
       // Dropdown classes
-      document.querySelectorAll('.voice-item').forEach(item => {
+      document.querySelectorAll('.voice-article').forEach(item => {
         item.classList.remove('active');
-        item.style.display = item.id === `v-${voiceId}` ? 'none' : 'flex';
+        // Filter out selected from list
+        const listItem = item.closest('.listitem');
+        listItem.style.display = listItem.id === `v-${voiceId}` ? 'none' : 'block';
       });
-      document.getElementById(`v-${voiceId}`).classList.add('active');
+      const selectedArt = document.querySelector(`#v-${voiceId} .voice-article`);
+      if (selectedArt) selectedArt.classList.add('active');
       
       // Check recommendation for header
       const recVoice = recommendations[currentIndustry];
@@ -344,7 +387,7 @@
       else dropdown.classList.remove('recommended-active');
 
       // Close dropdown
-      dropdown.classList.remove('open');
+      document.getElementById('state-dropdown').checked = false;
     }
 
     let currentPreview = null;
