@@ -225,10 +225,8 @@
       el.classList.add('active');
       currentIndustry = industry;
       
-      // Update recommended voice
       const recVoice = recommendations[industry];
-      updateRecommendations(recVoice);
-      selectVoice(recVoice); // Auto-select recommended
+      selectVoice(recVoice);
 
       history = [];
       const config = industries[industry];
@@ -238,34 +236,19 @@
       addMessage(config.greeting, 'bot');
     }
 
-    function updateRecommendations(recVoice) {
-      document.querySelectorAll('.voice-item').forEach(item => {
-        item.classList.remove('recommended');
-      });
-      document.getElementById(`v-${recVoice}`).classList.add('recommended');
-      
-      // Update header badge
-      const dropdown = document.getElementById('voiceDropdown');
-      if (selectedVoice === recVoice) {
-        dropdown.classList.add('recommended-active');
-      } else {
-        dropdown.classList.remove('recommended-active');
-      }
-    }
-
     function selectVoice(voiceId) {
       selectedVoice = voiceId;
-      
       const voiceItems = {
         'nova': { name: 'Nova', meta: 'Cheerful & Energetic' },
         'shimmer': { name: 'Shimmer', meta: 'Warm & Welcoming' },
         'echo': { name: 'Echo', meta: 'Friendly & Professional' },
         'onyx': { name: 'Onyx', meta: 'Deep & Authoritative' }
       };
-      
       const info = voiceItems[voiceId];
-      document.getElementById('voice-name').textContent = info.name;
-      document.getElementById('voice-meta').textContent = info.meta;
+      if (info) {
+        document.getElementById('voice-name').textContent = info.name;
+        document.getElementById('voice-meta').textContent = info.meta;
+      }
     }
 
     function playLocalSample(voiceId) {
