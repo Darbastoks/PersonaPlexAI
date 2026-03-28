@@ -12,6 +12,8 @@ const { MongoClient } = require('mongodb');
 require('dotenv').config();
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_mock');
+const { OAuth2Client } = require('google-auth-library');
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // ── MongoDB Connection ──────────────────────────────────────────
 const MONGODB_URI = process.env.MONGODB_URI || '';
@@ -139,6 +141,47 @@ const leadsFile = path.join(__dirname, 'leads.json');
 const chatLogsFile = path.join(__dirname, 'chat-logs.json');
 if (!fs.existsSync(leadsFile)) fs.writeFileSync(leadsFile, '[]');
 if (!fs.existsSync(chatLogsFile)) fs.writeFileSync(chatLogsFile, '[]');
+
+// ── Auth & Identity ──────────────────────────────────────────
+async function verifyGoogleToken(token) {
+  if (!process.env.GOOGLE_CLIENT_ID) {
+    console.warn('⚠️ No GOOGLE_CLIENT_ID — skipping real verification (Dev Mode)');
+    // In dev mode without a client ID, we can't verify, but we can decode if needed
+    // For now, return null to show it's unconfigured
+    return null;
+  }
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    return ticket.getPayload();
+  } catch (e) {
+    console.error('❌ Google Token Verification failed:', e.message);
+    return null;
+  }
+}
+
+app.post('/api/auth/google', async (req, res) => {
+  const { credential } = req.body;
+  if (!credential) return res.status(400).json({ error: 'Missing credential' });
+
+  const payload = await verifyGoogleToken(credential);
+  if (!payload && process.env.GOOGLE_CLIENT_ID) {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+
+  // If in dev mode (no client ID), we might just return a mock or error
+  // For production, we return the verified identity
+  const user = payload ? {
+    email: payload.email,
+    name: payload.name,
+    picture: payload.picture,
+    sub: payload.sub
+  } : { error: 'Google Auth unconfigured. Please set GOOGLE_CLIENT_ID.' };
+
+  res.json({ success: !!payload, user });
+});
 
 // ── Groq LLM ──────────────────────────────────────────────────
 const GROQ_API_KEY = process.env.GROQ_API_KEY || '';
@@ -741,11 +784,25 @@ if (!fs.existsSync(scrapedLeadsFile)) fs.writeFileSync(scrapedLeadsFile, JSON.st
 app.post('/api/onboard', async (req, res) => {
   try {
     const data = req.body;
+    const googleId = data.googleId || null;
+
+    // ── Trial Protection ─────────────────────────────────────────
+    if (googleId) {
+      const submissions = JSON.parse(fs.readFileSync(onboardingFile));
+      const existing = submissions.find(s => s.googleId === googleId || s.email === data.email);
+      if (existing) {
+        return res.status(403).json({ 
+          error: 'Trial Limit Exceeded', 
+          message: 'It looks like you have already claimed a free trial. Please log in to your dashboard.' 
+        });
+      }
+    }
+
     // Save intake form data
     const submissions = JSON.parse(fs.readFileSync(onboardingFile));
-    submissions.push({ ...data, date: new Date().toISOString() });
+    submissions.push({ ...data, googleId, date: new Date().toISOString() });
     fs.writeFileSync(onboardingFile, JSON.stringify(submissions, null, 2));
-    console.log(`📋 New intake form: ${data.businessName} (${data.industry})`);
+    console.log(`📋 New intake form: ${data.businessName} (${data.industry}) | GoogleID: ${googleId}`);
 
     let unitAmount = 4900;
     let productName = 'Starter Plan (Monthly)';
