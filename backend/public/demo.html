@@ -87,14 +87,32 @@
     @keyframes pulse-mic { 0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); } 50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } }
 
     .voice-selection { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
-    .voice-selection h2 { font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
-    .voice-list { display: flex; flex-direction: column; gap: 6px; }
-    .voice-item { 
-      padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); 
-      cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s;
+    .voice-selection h2 { font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; }
+    
+    .voice-dropdown { 
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); 
+      position: relative; cursor: pointer;
     }
-    .voice-item:hover { border-color: #333; }
-    .voice-item.active { border-color: var(--green); background: var(--green-dim); }
+    .voice-header { padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; }
+    .voice-header:hover { background: #1a1a1a; }
+    .voice-header-right { display: flex; align-items: center; gap: 12px; }
+    .chevron { font-size: 0.7rem; color: var(--text-muted); transition: transform 0.2s; }
+    .voice-dropdown.open .chevron { transform: rotate(180deg); }
+    
+    .voice-options { 
+      display: none; border-top: 1px solid var(--border); background: #0c0c0c;
+      border-bottom-left-radius: var(--radius-sm); border-bottom-right-radius: var(--radius-sm);
+    }
+    .voice-dropdown.open .voice-options { display: block; }
+    
+    .voice-item { 
+      padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; 
+      transition: all 0.2s; border-bottom: 1px solid var(--border);
+    }
+    .voice-item:last-child { border-bottom: none; }
+    .voice-item:hover { background: #1a1a1a; }
+    .voice-item.active { background: var(--green-dim); }
+    
     .voice-info { display: flex; align-items: center; gap: 10px; }
     .voice-name { font-size: 0.85rem; font-weight: 600; }
     .voice-meta { font-size: 0.7rem; color: var(--text-muted); }
@@ -102,7 +120,9 @@
       font-size: 0.6rem; font-weight: 800; color: #000; background: var(--green); 
       padding: 2px 6px; border-radius: 4px; display: none; 
     }
-    .voice-item.recommended .voice-badge { display: block; }
+    .voice-item.recommended .voice-badge,
+    .voice-dropdown.recommended-active .voice-header .voice-badge { display: block; }
+
     .play-sample { 
       background: none; border: none; color: var(--text-secondary); cursor: pointer; 
       font-size: 0.9rem; padding: 4px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
@@ -143,46 +163,61 @@
 
       <div class="voice-selection">
         <h2>Voice Personality</h2>
-        <div class="voice-list">
-          <div class="voice-item active" id="v-nova" onclick="selectVoice('nova')">
+        <div class="voice-dropdown" id="voiceDropdown">
+          <div class="voice-header" onclick="toggleVoiceDropdown()">
             <div class="voice-info">
-              <button class="play-sample" onclick="event.stopPropagation(); playLocalSample('nova')" title="Play Sample">▶</button>
+              <button class="play-sample" id="header-play" onclick="event.stopPropagation(); playLocalSample(selectedVoice, true)" title="Play Sample">▶</button>
               <div>
-                <div class="voice-name">Nova</div>
-                <div class="voice-meta">Cheerful & Energetic</div>
+                <div class="voice-name" id="selected-voice-name">Nova</div>
+                <div class="voice-meta" id="selected-voice-meta">Cheerful & Energetic</div>
               </div>
             </div>
-            <div class="voice-badge">RECOMMENDED</div>
+            <div class="voice-header-right">
+              <div class="voice-badge">RECOMMENDED</div>
+              <span class="chevron">▼</span>
+            </div>
           </div>
-          <div class="voice-item" id="v-shimmer" onclick="selectVoice('shimmer')">
-            <div class="voice-info">
-              <button class="play-sample" onclick="event.stopPropagation(); playLocalSample('shimmer')" title="Play Sample">▶</button>
-              <div>
-                <div class="voice-name">Shimmer</div>
-                <div class="voice-meta">Warm & Welcoming</div>
+          <div class="voice-options">
+            <div class="voice-item" id="v-nova" onclick="selectVoice('nova')">
+              <div class="voice-info">
+                <button class="play-sample" onclick="event.stopPropagation(); playLocalSample('nova')" title="Play Sample">▶</button>
+                <div>
+                  <div class="voice-name">Nova</div>
+                  <div class="voice-meta">Cheerful & Energetic</div>
+                </div>
               </div>
+              <div class="voice-badge">RECOMMENDED</div>
             </div>
-            <div class="voice-badge">RECOMMENDED</div>
-          </div>
-          <div class="voice-item" id="v-echo" onclick="selectVoice('echo')">
-            <div class="voice-info">
-              <button class="play-sample" onclick="event.stopPropagation(); playLocalSample('echo')" title="Play Sample">▶</button>
-              <div>
-                <div class="voice-name">Echo</div>
-                <div class="voice-meta">Friendly & Professional</div>
+            <div class="voice-item" id="v-shimmer" onclick="selectVoice('shimmer')">
+              <div class="voice-info">
+                <button class="play-sample" onclick="event.stopPropagation(); playLocalSample('shimmer')" title="Play Sample">▶</button>
+                <div>
+                  <div class="voice-name">Shimmer</div>
+                  <div class="voice-meta">Warm & Welcoming</div>
+                </div>
               </div>
+              <div class="voice-badge">RECOMMENDED</div>
             </div>
-            <div class="voice-badge">RECOMMENDED</div>
-          </div>
-          <div class="voice-item" id="v-onyx" onclick="selectVoice('onyx')">
-            <div class="voice-info">
-              <button class="play-sample" onclick="event.stopPropagation(); playLocalSample('onyx')" title="Play Sample">▶</button>
-              <div>
-                <div class="voice-name">Onyx</div>
-                <div class="voice-meta">Deep & Authoritative</div>
+            <div class="voice-item" id="v-echo" onclick="selectVoice('echo')">
+              <div class="voice-info">
+                <button class="play-sample" onclick="event.stopPropagation(); playLocalSample('echo')" title="Play Sample">▶</button>
+                <div>
+                  <div class="voice-name">Echo</div>
+                  <div class="voice-meta">Friendly & Professional</div>
+                </div>
               </div>
+              <div class="voice-badge">RECOMMENDED</div>
             </div>
-            <div class="voice-badge">RECOMMENDED</div>
+            <div class="voice-item" id="v-onyx" onclick="selectVoice('onyx')">
+              <div class="voice-info">
+                <button class="play-sample" onclick="event.stopPropagation(); playLocalSample('onyx')" title="Play Sample">▶</button>
+                <div>
+                  <div class="voice-name">Onyx</div>
+                  <div class="voice-meta">Deep & Authoritative</div>
+                </div>
+              </div>
+              <div class="voice-badge">RECOMMENDED</div>
+            </div>
           </div>
         </div>
       </div>
@@ -266,20 +301,53 @@
         item.classList.remove('recommended');
       });
       document.getElementById(`v-${recVoice}`).classList.add('recommended');
+      
+      // Update header badge
+      const dropdown = document.getElementById('voiceDropdown');
+      if (selectedVoice === recVoice) {
+        dropdown.classList.add('recommended-active');
+      } else {
+        dropdown.classList.remove('recommended-active');
+      }
+    }
+
+    function toggleVoiceDropdown() {
+      document.getElementById('voiceDropdown').classList.toggle('open');
     }
 
     function selectVoice(voiceId) {
       selectedVoice = voiceId;
-      document.querySelectorAll('.voice-item').forEach(item => {
-        item.classList.remove('active');
-      });
+      
+      // Update header text
+      const voiceItems = {
+        'nova': { name: 'Nova', meta: 'Cheerful & Energetic' },
+        'shimmer': { name: 'Shimmer', meta: 'Warm & Welcoming' },
+        'echo': { name: 'Echo', meta: 'Friendly & Professional' },
+        'onyx': { name: 'Onyx', meta: 'Deep & Authoritative' }
+      };
+      
+      const info = voiceItems[voiceId];
+      document.getElementById('selected-voice-name').textContent = info.name;
+      document.getElementById('selected-voice-meta').textContent = info.meta;
+      
+      // Dropdown classes
+      document.querySelectorAll('.voice-item').forEach(item => item.classList.remove('active'));
       document.getElementById(`v-${voiceId}`).classList.add('active');
+      
+      // Check recommendation for header
+      const recVoice = recommendations[currentIndustry];
+      const dropdown = document.getElementById('voiceDropdown');
+      if (voiceId === recVoice) dropdown.classList.add('recommended-active');
+      else dropdown.classList.remove('recommended-active');
+
+      // Close dropdown
+      dropdown.classList.remove('open');
     }
 
     let currentPreview = null;
     let currentPreviewId = null;
 
-    function playLocalSample(voiceId) {
+    function playLocalSample(voiceId, isHeader = false) {
       const btn = event.currentTarget;
       
       if (currentPreview && currentPreviewId === voiceId) {
@@ -290,6 +358,9 @@
         currentPreviewId = null;
         btn.innerHTML = '▶';
         btn.classList.remove('playing');
+        // Reset header play button too if we stopped from an item
+        document.getElementById('header-play').innerHTML = '▶';
+        document.getElementById('header-play').classList.remove('playing');
         return;
       }
 
@@ -305,11 +376,21 @@
       btn.innerHTML = '■';
       btn.classList.add('playing');
       
+      // If we clicked an item, also show 'playing' on the header if it matches the voice
+      if (voiceId === selectedVoice) {
+        document.getElementById('header-play').innerHTML = '■';
+        document.getElementById('header-play').classList.add('playing');
+      }
+      
       currentPreview = new Audio(`/audio/${voiceId}.mp3`);
       currentPreviewId = voiceId;
       currentPreview.onended = () => {
         btn.innerHTML = '▶';
         btn.classList.remove('playing');
+        document.querySelectorAll('.play-sample').forEach(b => {
+          b.innerHTML = '▶';
+          b.classList.remove('playing');
+        });
         currentPreview = null;
         currentPreviewId = null;
       };
