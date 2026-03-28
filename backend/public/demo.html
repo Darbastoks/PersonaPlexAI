@@ -86,6 +86,29 @@
     .mic-btn.recording { background: var(--red-dim); border-color: var(--red); animation: pulse-mic 1s infinite; }
     @keyframes pulse-mic { 0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); } 50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } }
 
+    .voice-selection { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .voice-selection h2 { font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+    .voice-list { display: flex; flex-direction: column; gap: 6px; }
+    .voice-item { 
+      padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); 
+      cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s;
+    }
+    .voice-item:hover { border-color: #333; }
+    .voice-item.active { border-color: var(--green); background: var(--green-dim); }
+    .voice-info { display: flex; align-items: center; gap: 10px; }
+    .voice-name { font-size: 0.85rem; font-weight: 600; }
+    .voice-meta { font-size: 0.7rem; color: var(--text-muted); }
+    .voice-badge { 
+      font-size: 0.6rem; font-weight: 800; color: #000; background: var(--green); 
+      padding: 2px 6px; border-radius: 4px; display: none; 
+    }
+    .voice-item.recommended .voice-badge { display: block; }
+    .play-sample { 
+      background: none; border: none; color: var(--text-secondary); cursor: pointer; 
+      font-size: 0.9rem; padding: 4px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    }
+    .play-sample:hover { color: var(--green); background: var(--green-dim); }
+
     /* ── Responsive ────── */
     @media (max-width: 768px) {
       .demo-layout { grid-template-columns: 1fr; }
@@ -114,6 +137,52 @@
         <button class="industry-btn" onclick="switchIndustry(this, 'law')"><span class="icon">⚖️</span> Law Firm</button>
         <button class="industry-btn" onclick="switchIndustry(this, 'realestate')"><span class="icon">🏠</span> Real Estate</button>
         <button class="industry-btn" onclick="switchIndustry(this, 'fitness')"><span class="icon">💪</span> Fitness / Gym</button>
+      </div>
+
+      <div class="voice-selection">
+        <h2>Voice Personality</h2>
+        <div class="voice-list">
+          <div class="voice-item active" id="v-nova" onclick="selectVoice('nova')">
+            <div class="voice-info">
+              <button class="play-sample" onclick="event.stopPropagation(); playLocalSample('nova')" title="Play Sample">▶</button>
+              <div>
+                <div class="voice-name">Nova</div>
+                <div class="voice-meta">Cheerful & Energetic</div>
+              </div>
+            </div>
+            <div class="voice-badge">RECOMMENDED</div>
+          </div>
+          <div class="voice-item" id="v-shimmer" onclick="selectVoice('shimmer')">
+            <div class="voice-info">
+              <button class="play-sample" onclick="event.stopPropagation(); playLocalSample('shimmer')" title="Play Sample">▶</button>
+              <div>
+                <div class="voice-name">Shimmer</div>
+                <div class="voice-meta">Warm & Welcoming</div>
+              </div>
+            </div>
+            <div class="voice-badge">RECOMMENDED</div>
+          </div>
+          <div class="voice-item" id="v-echo" onclick="selectVoice('echo')">
+            <div class="voice-info">
+              <button class="play-sample" onclick="event.stopPropagation(); playLocalSample('echo')" title="Play Sample">▶</button>
+              <div>
+                <div class="voice-name">Echo</div>
+                <div class="voice-meta">Friendly & Professional</div>
+              </div>
+            </div>
+            <div class="voice-badge">RECOMMENDED</div>
+          </div>
+          <div class="voice-item" id="v-onyx" onclick="selectVoice('onyx')">
+            <div class="voice-info">
+              <button class="play-sample" onclick="event.stopPropagation(); playLocalSample('onyx')" title="Play Sample">▶</button>
+              <div>
+                <div class="voice-name">Onyx</div>
+                <div class="voice-meta">Deep & Authoritative</div>
+              </div>
+            </div>
+            <div class="voice-badge">RECOMMENDED</div>
+          </div>
+        </div>
       </div>
       <div class="sidebar-cta">
         <p>Like what you see? Get your own AI chatbot.</p>
@@ -156,21 +225,63 @@
     };
 
     let currentIndustry = 'dental';
+    let selectedVoice = 'shimmer'; // Default for dental
     let history = [];
     let voiceOn = false;
     let mediaRecorder = null;
     let isRecording = false;
 
+    // Industry to Voice Mapping
+    const recommendations = {
+      'dental': 'shimmer',
+      'salon': 'nova',
+      'restaurant': 'shimmer',
+      'law': 'onyx',
+      'realestate': 'echo',
+      'fitness': 'nova'
+    };
+
     function switchIndustry(el, industry) {
       document.querySelectorAll('.industry-btn').forEach(b => b.classList.remove('active'));
       el.classList.add('active');
       currentIndustry = industry;
+      
+      // Update recommended voice
+      const recVoice = recommendations[industry];
+      updateRecommendations(recVoice);
+      selectVoice(recVoice); // Auto-select recommended
+
       history = [];
       const config = industries[industry];
       document.getElementById('chatAvatar').textContent = config.icon;
       document.getElementById('chatName').textContent = config.name;
       document.getElementById('messages').innerHTML = '';
       addMessage(config.greeting, 'bot');
+    }
+
+    function updateRecommendations(recVoice) {
+      document.querySelectorAll('.voice-item').forEach(item => {
+        item.classList.remove('recommended');
+      });
+      document.getElementById(`v-${recVoice}`).classList.add('recommended');
+    }
+
+    function selectVoice(voiceId) {
+      selectedVoice = voiceId;
+      document.querySelectorAll('.voice-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      document.getElementById(`v-${voiceId}`).classList.add('active');
+    }
+
+    let currentPreview = null;
+    function playLocalSample(voiceId) {
+      if (currentPreview) {
+        currentPreview.pause();
+        currentPreview.currentTime = 0;
+      }
+      currentPreview = new Audio(`/audio/${voiceId}.mp3`);
+      currentPreview.play().catch(e => console.error("Preview failed:", e));
     }
 
     function addMessage(text, type) {
@@ -231,7 +342,8 @@
           body: JSON.stringify({
             message: msg,
             systemPrompt: config.systemPrompt,
-            history: history.slice(-6)
+            history: history.slice(-6),
+            voice: selectedVoice
           })
         });
         const data = await resp.json();
@@ -327,6 +439,8 @@
 
     // Init
     addMessage(industries.dental.greeting, 'bot');
+    updateRecommendations('shimmer');
+    selectVoice('shimmer');
   </script>
 </body>
 </html>

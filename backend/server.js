@@ -242,15 +242,24 @@ async function callG4F(userMessage) {
 // ── TTS ────────────────────────────────────────────────────────
 const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY || '';
 
-async function generateTTS(text) {
-  if (!DEEPGRAM_API_KEY || DEEPGRAM_API_KEY.length < 10) return null; // Fallback to browser TTS
+async function generateTTS(text, voiceId = 'nova') {
+  if (!DEEPGRAM_API_KEY || DEEPGRAM_API_KEY.length < 10) return null;
+
+  // Map our personas to Deepgram Aura models
+  const voiceMap = {
+    'nova': 'aura-asteria-en',    // Happy/Cheerful Female
+    'shimmer': 'aura-luna-en',   // Warm/Polished Female
+    'echo': 'aura-orion-en',     // Friendly/Efficient Male
+    'onyx': 'aura-perseus-en'    // Deep/Authoritative Male
+  };
+  const model = voiceMap[voiceId] || 'aura-asteria-en';
 
   const payload = JSON.stringify({ text });
 
   return new Promise((resolve) => {
     const req = https.request({
       hostname: 'api.deepgram.com',
-      path: '/v1/speak?model=aura-asteria-en&encoding=mp3', // Lightning-fast female voice
+      path: `/v1/speak?model=${model}&encoding=mp3`,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -259,15 +268,15 @@ async function generateTTS(text) {
       }
     }, (res) => {
       if (res.statusCode !== 200) {
-        console.error('Deepgram TTS failed with status: ' + res.statusCode);
-        return resolve(null); // Safely fallback if Deepgram fails or rate limits
+        console.error(`Deepgram TTS (${model}) failed with status: ${res.statusCode}`);
+        return resolve(null);
       }
       
       const chunks = [];
       res.on('data', chunk => chunks.push(chunk));
       res.on('end', () => {
         const audioBuffer = Buffer.concat(chunks);
-        resolve(audioBuffer.toString('base64')); // Send instantly to frontend!
+        resolve(audioBuffer.toString('base64'));
       });
     });
 
@@ -507,7 +516,7 @@ app.post('/api/demo-chat', async (req, res) => {
     });
 
     // Generate TTS audio for voice playback
-    const audio64 = await generateTTS(reply);
+    const audio64 = await generateTTS(reply, req.body.voice || 'nova');
 
     res.json({ reply, audioBase64: audio64 });
   } catch (e) {
