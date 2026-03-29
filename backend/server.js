@@ -987,10 +987,10 @@ app.post('/api/admin/outreach', async (req, res) => {
         html: `
           <div style="font-family: sans-serif; line-height: 1.6; color: #333;">
             <p>Hi there,</p>
-            <p>I was looking at <b>${lead.name}</b> and noticed you have a great reputation. I built a custom AI Voice Assistant specifically for local businesses like yours to handle missed calls and booking inquiries 24/7.</p>
-            <p>I'd love for you to hear what it sounds like:</p>
-            <p><a href="https://${hostname}/index.html" style="background: #3b82f6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Listen to the AI Demo</a></p>
-            <p>It takes about 30 seconds to hear it in action. If you like it, we can have it live on your site by tomorrow.</p>
+            <p>I was looking at <b>${lead.name}</b> and noticed you have a great reputation. I built a 24/7 Intelligent Web Concierge specifically for local businesses like yours to capture leads and answer customer questions instantly on your site.</p>
+            <p>I'd love for you to see it in action:</p>
+            <p><a href="https://${hostname}/index.html" style="background: #3b82f6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">See the AI Demo</a></p>
+            <p>It takes about 30 seconds to try it. If you like it, we can have it live on your site by tomorrow.</p>
             <p>Best regards,<br><b>The ChatVora Team</b></p>
           </div>
         `
